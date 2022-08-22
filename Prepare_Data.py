@@ -8,11 +8,11 @@ Load datasets for models
 from __future__ import print_function
 from __future__ import division
 import numpy as np
-from sklearn.model_selection import StratifiedKFold
+from sklearn.model_selection import StratifiedKFold, StratifiedShuffleSplit
 
 ## PyTorch dependencies
 import torch
-from torchvision import transforms
+from torchvision import transforms, datasets
 
 ## Local external libraries
 from Datasets.DTD_loader import DTD_data
@@ -96,7 +96,7 @@ def Prepare_DataLoaders(Network_parameters, split,input_size=224):
         test_dataset = MINC_2500_data(data_dir, data = 'test',
                                            numset = split + 1,
                                            img_transform=data_transforms['val'])
-    else:
+    elif Dataset == 'GTOS-mobile':
         # Create training and test datasets
         dataset = GTOS_mobile_single_data(data_dir, train = True,
                                           image_size=Network_parameters['resize_size'],
@@ -109,7 +109,7 @@ def Prepare_DataLoaders(Network_parameters, split,input_size=224):
         skf = StratifiedKFold(n_splits=Network_parameters['Splits'][Dataset],shuffle=True,
                    random_state=Network_parameters['random_state'])
         
-        for train_index, val_index in skf.split(X):
+        for train_index, val_index in skf.split(X, Y):
              train_indices.append(train_index)
              val_indices.append(val_index)
         
@@ -117,6 +117,94 @@ def Prepare_DataLoaders(Network_parameters, split,input_size=224):
         validation_dataset = torch.utils.data.Subset(dataset, val_indices[split])
         test_dataset = GTOS_mobile_single_data(data_dir, train = False,
                                            img_transform=data_transforms['val'])
+    elif Dataset == 'fashionmnist':
+        tr_dataset = datasets.FashionMNIST(data_dir, train=True,
+                                           transform=data_transforms['train'],
+                                           download=True)
+        X = np.ones(len(tr_dataset))
+        Y = tr_dataset.targets
+        train_indices = []
+        val_indices = []
+    
+        skf = StratifiedKFold(n_splits=Network_parameters['Splits'][Dataset],
+                              shuffle=True,
+                              random_state=Network_parameters['random_state'])
+        
+        for train_index, val_index in skf.split(X, Y):
+             train_indices.append(train_index)
+             val_indices.append(val_index)
+        
+        train_dataset = torch.utils.data.Subset(tr_dataset, train_indices[split])
+        validation_dataset = torch.utils.data.Subset(tr_dataset, val_indices[split])
+        test_dataset = datasets.FashionMNIST(data_dir, train=False,
+                                             transform=data_transforms['val'],
+                                             download=True)
+    elif Dataset == 'cifar10':
+        tr_dataset = datasets.CIFAR10(data_dir, train=True,
+                                      transform=data_transforms['train'],
+                                      download=True)
+        X = np.ones(len(tr_dataset))
+        Y = tr_dataset.targets
+        train_indices = []
+        val_indices = []
+    
+        skf = StratifiedKFold(n_splits=Network_parameters['Splits'][Dataset],
+                              shuffle=True,
+                              random_state=Network_parameters['random_state'])
+        
+        for train_index, val_index in skf.split(X, Y):
+             train_indices.append(train_index)
+             val_indices.append(val_index)
+        
+        train_dataset = torch.utils.data.Subset(tr_dataset, train_indices[split])
+        validation_dataset = torch.utils.data.Subset(tr_dataset, val_indices[split])
+        test_dataset = datasets.CIFAR10(data_dir, train=False,
+                                        transform=data_transforms['val'],
+                                        download=True)
+    elif Dataset == 'cifar100':
+        tr_dataset = datasets.CIFAR100(data_dir, train=True,
+                                       transform=data_transforms['train'],
+                                       download=True)
+        X = np.ones(len(tr_dataset))
+        Y = tr_dataset.targets
+        train_indices = []
+        val_indices = []
+    
+        skf = StratifiedKFold(n_splits=Network_parameters['Splits'][Dataset],
+                              shuffle=True,
+                              random_state=Network_parameters['random_state'])
+        
+        for train_index, val_index in skf.split(X, Y):
+             train_indices.append(train_index)
+             val_indices.append(val_index)
+        
+        train_dataset = torch.utils.data.Subset(tr_dataset, train_indices[split])
+        validation_dataset = torch.utils.data.Subset(tr_dataset, val_indices[split])
+        test_dataset = datasets.CIFAR100(data_dir, train=False,
+                                         transform=data_transforms['val'],
+                                         download=True)
+    elif Dataset == 'mnist':
+        tr_dataset = datasets.MNIST(data_dir, train=True,
+                                    transform=transforms.ToTensor(),
+                                    download=True)
+        X = np.ones(len(tr_dataset))
+        Y = tr_dataset.targets
+        train_indices = []
+        val_indices = []
+    
+        sss = StratifiedShuffleSplit(n_splits=2, test_size=0.1,
+                              random_state=Network_parameters['random_state'])
+        
+        for train_index, val_index in sss.split(X, Y):
+             train_indices.append(train_index)
+             val_indices.append(val_index)
+        
+        train_dataset = torch.utils.data.Subset(tr_dataset, train_indices)
+        validation_dataset = torch.utils.data.Subset(tr_dataset, val_indices)
+        test_dataset = datasets.MNIST(data_dir, train=False,
+                                      transform=transforms.ToTensor(),
+                                      download=True)
+
 
     #Do train/val/test split or train/test split only (validating on test data)    
     if Network_parameters['val_split']:

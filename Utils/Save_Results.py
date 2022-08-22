@@ -8,6 +8,7 @@ Save results from training/testing model
 from __future__ import print_function
 from __future__ import division
 import numpy as np
+import pickle
 import os
 
 ## PyTorch dependencies

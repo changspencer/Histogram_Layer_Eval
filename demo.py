@@ -50,7 +50,7 @@ num_feature_maps = Network_parameters['out_channels'][model_name]
 feat_map_size = Network_parameters['feat_map_size']
 
 # Detect if we have a GPU available
-device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
+device = torch.device("cuda:2" if torch.cuda.is_available() else "cpu")
 
 #Location to store trained models
 current_directory = os.getcwd()
@@ -94,7 +94,8 @@ for split in range(0, numRuns):
                                             use_pretrained=Network_parameters['use_pretrained'],
                                             add_bn = Network_parameters['add_bn'],
                                             scale = Network_parameters['scale'],
-                                            feat_map_size=feat_map_size)
+                                            feat_map_size=feat_map_size,
+                                            dataset=Dataset)
     # Send the model to GPU if available
     model_ft = model_ft.to(device)
     

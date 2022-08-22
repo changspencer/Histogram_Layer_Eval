@@ -8,7 +8,7 @@ import torch
 class HistRes(nn.Module):
     
     def __init__(self,histogram_layer,parallel=True,model_name ='resnet18',
-                 add_bn=True,scale=5,use_pretrained=True):
+                 add_bn=True,scale=5,use_pretrained=True,dataset=None):
         
         #inherit nn.module
         super(HistRes,self).__init__()
@@ -29,6 +29,9 @@ class HistRes(nn.Module):
         else: 
             print('Model not defined')
             
+        if dataset == 'mnist' or dataset == 'fashionmnist':
+            self.backbone.conv1 = nn.Conv2d(1, self.backbone.inplanes,
+                    kernel_size=3, stride=1, padding=1, bias=False)
         
         #Define histogram layer and fc
         self.histogram_layer = histogram_layer

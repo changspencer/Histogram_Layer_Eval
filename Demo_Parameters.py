@@ -22,18 +22,19 @@ histogram = True
 
 #Select histogram layer type: RBF or Piecewise Linear. 
 #Recommended is RBF (implements histogram function in paper)
-histogram_type = 'Linear'
+histogram_type = 'RBF'
 
 #Flag to create separate validation set
 #For paper, only used train/test split (default: False)
-val_split = False
+val_split = True
 
 #Parallelize results
 Parallelize_model = True
 
 #Select dataset. Set to number of desired texture dataset
-data_selection = 1
-Dataset_names = { 1: 'DTD', 2: 'GTOS-mobile', 3: 'MINC_2500'}
+data_selection = 0
+Dataset_names = { 0: 'mnist', 1: 'DTD', 2: 'GTOS-mobile', 3: 'MINC_2500',
+                  4: 'fashionmnist', 5: 'cifar10', 6: 'cifar100'}
 
 #Set random state for K fold CV for repeatability of data
 random_state = 1
@@ -54,7 +55,7 @@ numBins = 4
 #Flag to add BN to convolutional features (default:True)
 #Location/Scale at which to apply histogram layer (default: 5 (at the end))
 feature_extraction = False
-use_pretrained = True
+use_pretrained = False
 add_bn = True
 scale = 5
 
@@ -103,8 +104,8 @@ gamma = .1
 #training batch size is recommended to be 64. If using at least two GPUs, 
 #the recommended training batch size is 128 (as done in paper)
 #May need to reduce batch size if CUDA out of memory issue occurs
-batch_size = {'train': 8, 'val': 256, 'test': 256}
-num_epochs = 30
+batch_size = {'train': 128, 'val': 256, 'test': 256}
+num_epochs = 1
 
 #Resize the image before center crop. Recommended values for resize is 256 (used in paper), 384,
 #and 512 (from http://openaccess.thecvf.com/content_cvpr_2018/papers/Xue_Deep_Texture_Manifold_CVPR_2018_paper.pdf)
@@ -170,22 +171,39 @@ else:
 #Location of texture datasets
 Data_dirs = {'DTD': './Datasets/DTD/', 
              'MINC_2500': './Datasets/minc-2500/',
-             'GTOS-mobile': './Datasets/gtos-mobile'}
+             'GTOS-mobile': './Datasets/gtos-mobile',
+             'mnist': './Datasets/',
+             'fashionmnist': './Datasets/',
+             'cifar10': './Datasets/',
+             'cifar100': './Datasets/'
+             }
 
 #ResNet models to use for each dataset
 Model_names = {'DTD': 'resnet50', 
                'MINC_2500': 'resnet50',
-               'GTOS-mobile': 'resnet18'}
+               'GTOS-mobile': 'resnet18',
+               'mnist': 'resnet18',
+               'fashiomnist': 'resnet18',
+               'cifar10': 'resnet50',
+               'cifar100': 'resnet50'}
 
 #Number of classes in each dataset
 num_classes = {'DTD': 47, 
                'MINC_2500': 23,
-               'GTOS-mobile': 31}
+               'GTOS-mobile': 31,
+               'mnist': 10,
+               'fashionmnist': 10,
+               'cifar10': 10,
+               'cifar100': 100}
 
 #Number of runs and/or splits for each dataset
-Splits = {'DTD': 10, 
+Splits = {'DTD': 5, 
           'MINC_2500': 5,
-          'GTOS-mobile': 5}
+          'GTOS-mobile': 10,
+          'mnist': 2,
+          'fashiomnist': 2,
+          'cifar10': 2,
+          'cifar100': 2}
 
 Dataset = Dataset_names[data_selection]
 data_dir = Data_dirs[Dataset]

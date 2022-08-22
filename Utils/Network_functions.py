@@ -49,6 +49,9 @@ def train_model(model, dataloaders, criterion, optimizer, device,
             running_corrects = 0
 
             # Iterate over data.
+            for tup in dataloaders[phase]:
+                for i in range(len(tup)):
+                    print(tup[i])
             for idx, (inputs, labels, index) in enumerate(Bar(dataloaders[phase])):
                 inputs = inputs.to(device)
                 labels = labels.to(device)
@@ -167,7 +170,7 @@ def test_model(dataloader,model,device):
 def initialize_model(model_name, num_classes,in_channels,out_channels, 
                      feature_extract=False, histogram=True,histogram_layer=None,
                      parallel=True, use_pretrained=True,add_bn=True,scale=5,
-                     feat_map_size=4):
+                     feat_map_size=4, dataset=None):
     # Initialize these variables which will be set in this if statement. Each of these
     #   variables is model specific.
     model_ft = None
@@ -177,7 +180,8 @@ def initialize_model(model_name, num_classes,in_channels,out_channels,
         # variables is model specific.
         model_ft = HistRes(histogram_layer,parallel=parallel,
                            model_name=model_name,add_bn=add_bn,scale=scale,
-                           use_pretrained=use_pretrained)
+                           use_pretrained=use_pretrained,
+                           dataset=dataset)
         set_parameter_requires_grad(model_ft.backbone, feature_extract)
         
         #Reduce number of conv channels from input channels to input channels/number of bins*feat_map size (2x2)
@@ -204,6 +208,11 @@ def initialize_model(model_name, num_classes,in_channels,out_channels,
             num_ftrs = model_ft.fc.in_features
             model_ft.fc = nn.Linear(num_ftrs, num_classes)
             input_size = 224
+            
+            if dataset == 'mnist' or dataset == 'fashionmnist':
+                input_size = 28
+                self.model_ft.conv1 = nn.Conv2d(1, self.backbone.inplanes,
+                        kernel_size=3, stride=1, padding=1, bias=False)
     
         elif model_name == "resnet50":
             """ Resnet50
@@ -213,6 +222,12 @@ def initialize_model(model_name, num_classes,in_channels,out_channels,
             num_ftrs = model_ft.fc.in_features
             model_ft.fc = nn.Linear(num_ftrs, num_classes)
             input_size = 224
-        
+
+            if dataset == 'mnist' or dataset == 'fashionmnist':
+                input_size = 28
+                self.model_ft.conv1 = nn.Conv2d(1, self.backbone.inplanes,
+                        kernel_size=3, stride=1, padding=1, bias=False)
+    # TODO - Change this to be dependent on the dataset parameters 
+    input_size = 28
     return model_ft, input_size
 

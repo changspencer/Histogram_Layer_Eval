@@ -26,11 +26,12 @@ from Texture_information import Class_names
 from Demo_Parameters import Network_parameters as Results_parameters
 from Utils.Network_functions import initialize_model
 from Prepare_Data_Results import Prepare_DataLoaders
-from Utils.RBFHistogramPooling import HistogramLayer
+from Utils.RBFHistogramPooling import HistogramLayer as RBFHist
+from Utils.LinearHistogramPooling import HistogramLayer as LinearHist
 from Utils.Confusion_mats import plot_confusion_matrix,plot_avg_confusion_matrix
 
 #Location of experimental results
-device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
+device = torch.device("cuda:3" if torch.cuda.is_available() else "cpu")
 fig_size = Results_parameters['fig_size']
 font_size = Results_parameters['font_size']
 
