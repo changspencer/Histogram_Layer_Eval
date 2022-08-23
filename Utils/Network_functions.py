@@ -49,9 +49,6 @@ def train_model(model, dataloaders, criterion, optimizer, device,
             running_corrects = 0
 
             # Iterate over data.
-            for tup in dataloaders[phase]:
-                for i in range(len(tup)):
-                    print(tup[i])
             for idx, (inputs, labels, index) in enumerate(Bar(dataloaders[phase])):
                 inputs = inputs.to(device)
                 labels = labels.to(device)

@@ -28,15 +28,17 @@ class HistRes(nn.Module):
             
         else: 
             print('Model not defined')
-            
-        if dataset == 'mnist' or dataset == 'fashionmnist':
-            self.backbone.conv1 = nn.Conv2d(1, self.backbone.inplanes,
-                    kernel_size=3, stride=1, padding=1, bias=False)
         
         #Define histogram layer and fc
         self.histogram_layer = histogram_layer
         self.fc = self.backbone.fc
         self.backbone.fc = torch.nn.Sequential()
+            
+        if dataset == 'mnist' or dataset == 'fashionmnist':
+            self.backbone.conv1 = nn.Conv2d(1, self.backbone.conv1.out_channels,
+                    kernel_size=3, stride=1, padding=1, bias=False)
+            # self.fc = nn.Linear(in_features=640,
+            #                     out_features=10)
         
         
     def forward(self,x):

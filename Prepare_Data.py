@@ -15,6 +15,7 @@ import torch
 from torchvision import transforms, datasets
 
 ## Local external libraries
+from Datasets.Subset_Wrapper import Subset_Wrapper
 from Datasets.DTD_loader import DTD_data
 from Datasets.MINC_2500 import MINC_2500_data
 from Datasets.GTOS_mobile_single_size import GTOS_mobile_single_data
@@ -126,16 +127,18 @@ def Prepare_DataLoaders(Network_parameters, split,input_size=224):
         train_indices = []
         val_indices = []
     
-        skf = StratifiedKFold(n_splits=Network_parameters['Splits'][Dataset],
-                              shuffle=True,
+        # skf = StratifiedKFold(n_splits=Network_parameters['Splits'][Dataset],
+        #                       shuffle=True,
+        #                       random_state=Network_parameters['random_state'])
+        sss = StratifiedShuffleSplit(n_splits=Network_parameters['Splits'][Dataset], test_size=0.1,
                               random_state=Network_parameters['random_state'])
         
-        for train_index, val_index in skf.split(X, Y):
+        for train_index, val_index in sss.split(X, Y):
              train_indices.append(train_index)
              val_indices.append(val_index)
         
-        train_dataset = torch.utils.data.Subset(tr_dataset, train_indices[split])
-        validation_dataset = torch.utils.data.Subset(tr_dataset, val_indices[split])
+        train_dataset = torch.utils.data.Subset(tr_dataset, train_indices[0])
+        validation_dataset = torch.utils.data.Subset(tr_dataset, val_indices[0])
         test_dataset = datasets.FashionMNIST(data_dir, train=False,
                                              transform=data_transforms['val'],
                                              download=True)
@@ -148,16 +151,19 @@ def Prepare_DataLoaders(Network_parameters, split,input_size=224):
         train_indices = []
         val_indices = []
     
-        skf = StratifiedKFold(n_splits=Network_parameters['Splits'][Dataset],
-                              shuffle=True,
+        # skf = StratifiedKFold(n_splits=Network_parameters['Splits'][Dataset],
+        #                       shuffle=True,
+        #                       random_state=Network_parameters['random_state'])
+    
+        sss = StratifiedShuffleSplit(n_splits=Network_parameters['Splits'][Dataset], test_size=0.1,
                               random_state=Network_parameters['random_state'])
         
-        for train_index, val_index in skf.split(X, Y):
+        for train_index, val_index in sss.split(X, Y):
              train_indices.append(train_index)
              val_indices.append(val_index)
         
-        train_dataset = torch.utils.data.Subset(tr_dataset, train_indices[split])
-        validation_dataset = torch.utils.data.Subset(tr_dataset, val_indices[split])
+        train_dataset = torch.utils.data.Subset(tr_dataset, train_indices[0])
+        validation_dataset = torch.utils.data.Subset(tr_dataset, val_indices[0])
         test_dataset = datasets.CIFAR10(data_dir, train=False,
                                         transform=data_transforms['val'],
                                         download=True)
@@ -170,16 +176,19 @@ def Prepare_DataLoaders(Network_parameters, split,input_size=224):
         train_indices = []
         val_indices = []
     
-        skf = StratifiedKFold(n_splits=Network_parameters['Splits'][Dataset],
-                              shuffle=True,
+        # skf = StratifiedKFold(n_splits=Network_parameters['Splits'][Dataset],
+        #                       shuffle=True,
+        #                       random_state=Network_parameters['random_state'])
+    
+        sss = StratifiedShuffleSplit(n_splits=Network_parameters['Splits'][Dataset], test_size=0.1,
                               random_state=Network_parameters['random_state'])
         
-        for train_index, val_index in skf.split(X, Y):
+        for train_index, val_index in sss.split(X, Y):
              train_indices.append(train_index)
              val_indices.append(val_index)
         
-        train_dataset = torch.utils.data.Subset(tr_dataset, train_indices[split])
-        validation_dataset = torch.utils.data.Subset(tr_dataset, val_indices[split])
+        train_dataset = torch.utils.data.Subset(tr_dataset, train_indices[0])
+        validation_dataset = torch.utils.data.Subset(tr_dataset, val_indices[0])
         test_dataset = datasets.CIFAR100(data_dir, train=False,
                                          transform=data_transforms['val'],
                                          download=True)
@@ -192,19 +201,18 @@ def Prepare_DataLoaders(Network_parameters, split,input_size=224):
         train_indices = []
         val_indices = []
     
-        sss = StratifiedShuffleSplit(n_splits=2, test_size=0.1,
+        sss = StratifiedShuffleSplit(n_splits=Network_parameters['Splits'][Dataset], test_size=0.1,
                               random_state=Network_parameters['random_state'])
         
         for train_index, val_index in sss.split(X, Y):
              train_indices.append(train_index)
              val_indices.append(val_index)
         
-        train_dataset = torch.utils.data.Subset(tr_dataset, train_indices)
-        validation_dataset = torch.utils.data.Subset(tr_dataset, val_indices)
+        train_dataset = Subset_Wrapper(tr_dataset, train_indices[0])
+        validation_dataset = Subset_Wrapper(tr_dataset, val_indices[0])
         test_dataset = datasets.MNIST(data_dir, train=False,
                                       transform=transforms.ToTensor(),
                                       download=True)
-
 
     #Do train/val/test split or train/test split only (validating on test data)    
     if Network_parameters['val_split']:

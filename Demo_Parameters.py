@@ -122,7 +122,7 @@ pin_memory = True
 num_workers = 0
 
 #Output feature map size after histogram layer
-feat_map_size = 4
+feat_map_size = 1
 
 #Flag for TSNE visuals, set to True to create TSNE visual of features
 #Set to false to not generate TSNE visuals
@@ -161,6 +161,10 @@ else:
     in_channels = {"resnet50": 2048, "resnet18": 512}
     kernel_size = {"resnet50": [4,4],  "resnet18": [4,4]}
 
+if data_selection == 0 or data_selection == 4:  # for *MNIST 28x28 data
+    stride = [1, 1] 
+    in_channels = {"resnet50": 2048, "resnet18": 512}
+    kernel_size = {"resnet50": [2,2],  "resnet18": [2,2]}
 
 ######## ONLY CHANGE PARAMETERS ABOVE ########
 if feature_extraction:
@@ -200,10 +204,10 @@ num_classes = {'DTD': 47,
 Splits = {'DTD': 5, 
           'MINC_2500': 5,
           'GTOS-mobile': 10,
-          'mnist': 2,
-          'fashiomnist': 2,
-          'cifar10': 2,
-          'cifar100': 2}
+          'mnist': 1,
+          'fashiomnist': 1,
+          'cifar10': 1,
+          'cifar100': 1}
 
 Dataset = Dataset_names[data_selection]
 data_dir = Data_dirs[Dataset]
