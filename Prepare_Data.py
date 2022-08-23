@@ -127,9 +127,6 @@ def Prepare_DataLoaders(Network_parameters, split,input_size=224):
         train_indices = []
         val_indices = []
     
-        # skf = StratifiedKFold(n_splits=Network_parameters['Splits'][Dataset],
-        #                       shuffle=True,
-        #                       random_state=Network_parameters['random_state'])
         sss = StratifiedShuffleSplit(n_splits=Network_parameters['Splits'][Dataset], test_size=0.1,
                               random_state=Network_parameters['random_state'])
         
@@ -137,11 +134,12 @@ def Prepare_DataLoaders(Network_parameters, split,input_size=224):
              train_indices.append(train_index)
              val_indices.append(val_index)
         
-        train_dataset = torch.utils.data.Subset(tr_dataset, train_indices[0])
-        validation_dataset = torch.utils.data.Subset(tr_dataset, val_indices[0])
+        train_dataset = Subset_Wrapper(tr_dataset, train_indices[0])
+        validation_dataset = Subset_Wrapper(tr_dataset, val_indices[0])
         test_dataset = datasets.FashionMNIST(data_dir, train=False,
                                              transform=data_transforms['val'],
                                              download=True)
+        test_dataset = Subset_Wrapper(test_dataset, np.random.permutation(len(test_dataset)))
     elif Dataset == 'cifar10':
         tr_dataset = datasets.CIFAR10(data_dir, train=True,
                                       transform=data_transforms['train'],
@@ -151,10 +149,6 @@ def Prepare_DataLoaders(Network_parameters, split,input_size=224):
         train_indices = []
         val_indices = []
     
-        # skf = StratifiedKFold(n_splits=Network_parameters['Splits'][Dataset],
-        #                       shuffle=True,
-        #                       random_state=Network_parameters['random_state'])
-    
         sss = StratifiedShuffleSplit(n_splits=Network_parameters['Splits'][Dataset], test_size=0.1,
                               random_state=Network_parameters['random_state'])
         
@@ -162,11 +156,12 @@ def Prepare_DataLoaders(Network_parameters, split,input_size=224):
              train_indices.append(train_index)
              val_indices.append(val_index)
         
-        train_dataset = torch.utils.data.Subset(tr_dataset, train_indices[0])
-        validation_dataset = torch.utils.data.Subset(tr_dataset, val_indices[0])
+        train_dataset = Subset_Wrapper(tr_dataset, train_indices[0])
+        validation_dataset = Subset_Wrapper(tr_dataset, val_indices[0])
         test_dataset = datasets.CIFAR10(data_dir, train=False,
                                         transform=data_transforms['val'],
                                         download=True)
+        test_dataset = Subset_Wrapper(test_dataset, np.random.permutation(len(test_dataset)))
     elif Dataset == 'cifar100':
         tr_dataset = datasets.CIFAR100(data_dir, train=True,
                                        transform=data_transforms['train'],
@@ -176,10 +171,6 @@ def Prepare_DataLoaders(Network_parameters, split,input_size=224):
         train_indices = []
         val_indices = []
     
-        # skf = StratifiedKFold(n_splits=Network_parameters['Splits'][Dataset],
-        #                       shuffle=True,
-        #                       random_state=Network_parameters['random_state'])
-    
         sss = StratifiedShuffleSplit(n_splits=Network_parameters['Splits'][Dataset], test_size=0.1,
                               random_state=Network_parameters['random_state'])
         
@@ -187,11 +178,12 @@ def Prepare_DataLoaders(Network_parameters, split,input_size=224):
              train_indices.append(train_index)
              val_indices.append(val_index)
         
-        train_dataset = torch.utils.data.Subset(tr_dataset, train_indices[0])
-        validation_dataset = torch.utils.data.Subset(tr_dataset, val_indices[0])
+        train_dataset = Subset_Wrapper(tr_dataset, train_indices[0])
+        validation_dataset = Subset_Wrapper(tr_dataset, val_indices[0])
         test_dataset = datasets.CIFAR100(data_dir, train=False,
                                          transform=data_transforms['val'],
                                          download=True)
+        test_dataset = Subset_Wrapper(test_dataset, np.random.permutation(len(test_dataset)))
     elif Dataset == 'mnist':
         tr_dataset = datasets.MNIST(data_dir, train=True,
                                     transform=transforms.ToTensor(),
@@ -213,6 +205,7 @@ def Prepare_DataLoaders(Network_parameters, split,input_size=224):
         test_dataset = datasets.MNIST(data_dir, train=False,
                                       transform=transforms.ToTensor(),
                                       download=True)
+        test_dataset = Subset_Wrapper(test_dataset, np.random.permutation(len(test_dataset)))
 
     #Do train/val/test split or train/test split only (validating on test data)    
     if Network_parameters['val_split']:
