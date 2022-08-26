@@ -119,30 +119,49 @@ def Prepare_DataLoaders(Network_parameters, split,input_size=224):
         test_dataset = GTOS_mobile_single_data(data_dir, train = False,
                                            img_transform=data_transforms['val'])
     elif Dataset == 'fashionmnist':
+        fashion_tr = [
+            transforms.ToTensor(),
+            transforms.Normalize([0.2861], [0.3530]),
+        ]
+        extra_tr = [
+            transforms.RandomCrop(28, padding=4),
+            transforms.RandomHorizontalFlip()
+        ]
         tr_dataset = datasets.FashionMNIST(data_dir, train=True,
-                                           transform=data_transforms['train'],
+                                           transform=transforms.Compose(fashion_tr+extra_tr),
                                            download=True)
         X = np.ones(len(tr_dataset))
         Y = tr_dataset.targets
         train_indices = []
         val_indices = []
     
-        sss = StratifiedShuffleSplit(n_splits=Network_parameters['Splits'][Dataset], test_size=0.1,
-                              random_state=Network_parameters['random_state'])
+        # sss = StratifiedShuffleSplit(n_splits=Network_parameters['Splits'][Dataset], test_size=0.1,
+        #                       random_state=Network_parameters['random_state'])
+        skf = StratifiedKFold(n_splits=Network_parameters['Splits'][Dataset],shuffle=True,
+                   random_state=Network_parameters['random_state'])
         
-        for train_index, val_index in sss.split(X, Y):
+        for train_index, val_index in skf.split(X, Y):
              train_indices.append(train_index)
              val_indices.append(val_index)
         
-        train_dataset = Subset_Wrapper(tr_dataset, train_indices[0])
-        validation_dataset = Subset_Wrapper(tr_dataset, val_indices[0])
+        train_dataset = Subset_Wrapper(tr_dataset, train_indices[split])
+        validation_dataset = Subset_Wrapper(tr_dataset, val_indices[split])
         test_dataset = datasets.FashionMNIST(data_dir, train=False,
-                                             transform=data_transforms['val'],
+                                             transform=transforms.Compose(fashion_tr),
                                              download=True)
         test_dataset = Subset_Wrapper(test_dataset, np.random.permutation(len(test_dataset)))
     elif Dataset == 'cifar10':
+        cifar10_tr = transforms.Compose([
+            transforms.ToTensor(),
+            transforms.Normalize([0.4914, 0.4822, 0.4465],
+                                 [0.2470, 0.2435, 0.2616]),
+        ])
+        extra_tr = [
+            transforms.RandomCrop(32, padding=4),
+            transforms.RandomHorizontalFlip()
+        ]
         tr_dataset = datasets.CIFAR10(data_dir, train=True,
-                                      transform=data_transforms['train'],
+                                      transform=transforms.Compose(cifar10_tr + extra_tr),
                                       download=True)
         X = np.ones(len(tr_dataset))
         Y = tr_dataset.targets
@@ -159,12 +178,22 @@ def Prepare_DataLoaders(Network_parameters, split,input_size=224):
         train_dataset = Subset_Wrapper(tr_dataset, train_indices[0])
         validation_dataset = Subset_Wrapper(tr_dataset, val_indices[0])
         test_dataset = datasets.CIFAR10(data_dir, train=False,
-                                        transform=data_transforms['val'],
+                                        transform=transforms.Compose(cifar10_tr),
                                         download=True)
         test_dataset = Subset_Wrapper(test_dataset, np.random.permutation(len(test_dataset)))
     elif Dataset == 'cifar100':
+        cifar100_tr = [
+            transforms.ToTensor(),
+            transforms.Normalize([0.5071, 0.4865, 0.4409],
+                                 [0.2673, 0.2564, 0.2762]),
+        ]
+        extra_tr = [
+            transforms.RandomCrop(32, padding=4),
+            transforms.RandomHorizontalFlip(),
+            transforms.RandomRotation(15)
+        ]
         tr_dataset = datasets.CIFAR100(data_dir, train=True,
-                                       transform=data_transforms['train'],
+                                       transform=transforms.Compose(cifar100_tr + extra_tr),
                                        download=True)
         X = np.ones(len(tr_dataset))
         Y = tr_dataset.targets
@@ -181,29 +210,35 @@ def Prepare_DataLoaders(Network_parameters, split,input_size=224):
         train_dataset = Subset_Wrapper(tr_dataset, train_indices[0])
         validation_dataset = Subset_Wrapper(tr_dataset, val_indices[0])
         test_dataset = datasets.CIFAR100(data_dir, train=False,
-                                         transform=data_transforms['val'],
+                                         transform=transforms.Compose(cifar100_tr),
                                          download=True)
         test_dataset = Subset_Wrapper(test_dataset, np.random.permutation(len(test_dataset)))
     elif Dataset == 'mnist':
+        mnist_tr = transforms.Compose([
+            transforms.ToTensor(),
+            transforms.Normalize([0.1307], [0.3081])
+        ])
         tr_dataset = datasets.MNIST(data_dir, train=True,
-                                    transform=transforms.ToTensor(),
+                                    transform=mnist_tr,
                                     download=True)
         X = np.ones(len(tr_dataset))
         Y = tr_dataset.targets
         train_indices = []
         val_indices = []
     
-        sss = StratifiedShuffleSplit(n_splits=Network_parameters['Splits'][Dataset], test_size=0.1,
-                              random_state=Network_parameters['random_state'])
+        # sss = StratifiedShuffleSplit(n_splits=Network_parameters['Splits'][Dataset], test_size=0.1,
+        #                       random_state=Network_parameters['random_state'])
+        skf = StratifiedKFold(n_splits=Network_parameters['Splits'][Dataset],shuffle=True,
+                   random_state=Network_parameters['random_state'])
         
-        for train_index, val_index in sss.split(X, Y):
+        for train_index, val_index in skf.split(X, Y):
              train_indices.append(train_index)
              val_indices.append(val_index)
         
-        train_dataset = Subset_Wrapper(tr_dataset, train_indices[0])
-        validation_dataset = Subset_Wrapper(tr_dataset, val_indices[0])
+        train_dataset = Subset_Wrapper(tr_dataset, train_indices[split])
+        validation_dataset = Subset_Wrapper(tr_dataset, val_indices[split])
         test_dataset = datasets.MNIST(data_dir, train=False,
-                                      transform=transforms.ToTensor(),
+                                      transform=mnist_tr,
                                       download=True)
         test_dataset = Subset_Wrapper(test_dataset, np.random.permutation(len(test_dataset)))
 

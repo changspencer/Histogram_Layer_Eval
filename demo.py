@@ -25,7 +25,7 @@ import torch.optim as optim
 from Utils.Network_functions import initialize_model, train_model,test_model
 from Utils.RBFHistogramPooling import HistogramLayer as RBFHist
 from Utils.LinearHistogramPooling import HistogramLayer as LinearHist
-from Utils.Save_Results import save_results
+from Utils.Save_Results import save_results, save_params
 from Demo_Parameters import Network_parameters
 from Prepare_Data import Prepare_DataLoaders
 
@@ -50,13 +50,16 @@ num_feature_maps = Network_parameters['out_channels'][model_name]
 feat_map_size = Network_parameters['feat_map_size']
 
 # Detect if we have a GPU available
-device = torch.device("cuda:2" if torch.cuda.is_available() else "cpu")
+gpu_dev = Network_parameters['GPU_Num']
+device = torch.device(f"cuda:{gpu_dev}" if torch.cuda.is_available() else "cpu")
 
 #Location to store trained models
 current_directory = os.getcwd()
 final_directory = os.path.join(current_directory, Network_parameters['folder'])
 
 print('Starting Experiments...')
+save_params(Network_parameters)
+# exit()  # For debugging purposes
 
 for split in range(0, numRuns):
     
@@ -145,6 +148,7 @@ for split in range(0, numRuns):
     else:
         saved_bins = None
         saved_widths = None
+        dim_reduced = False
         optimizer_ft = optim.SGD([
                 {'params': model_ft.conv1.parameters()},
                 {'params': model_ft.bn1.parameters()},

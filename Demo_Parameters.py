@@ -17,8 +17,8 @@ save_results = True
 folder = 'Saved_Models/'
 
 #Flag to use histogram model or baseline global average pooling (GAP)
-# Set to True to use histogram layer and False to use GAP model 
-histogram = True
+# Set to True to use histogram layer and False to use (only?) GAP model 
+histogram = False
 
 #Select histogram layer type: RBF or Piecewise Linear. 
 #Recommended is RBF (implements histogram function in paper)
@@ -30,6 +30,9 @@ val_split = True
 
 #Parallelize results
 Parallelize_model = True
+
+#Main GPU to use
+gpu = 2
 
 #Select dataset. Set to number of desired texture dataset
 data_selection = 0
@@ -64,7 +67,7 @@ scale = 5
 #a learning rate 10 times larger than the pt learning rate.
 #e.g., new_lr = .001 and pt_lr = .01
 pt_lr = .001
-new_lr = .01
+new_lr = .1
 
 #Set momentum for SGD optimizer. 
 #Recommended value is .9 (used in paper)
@@ -97,7 +100,7 @@ normalize_bins = True
 
 #Set step_size and decay rate for scheduler
 #In paper, learning rate was decayed factor of .1 every ten epochs (recommended)
-step_size = 10
+step_size = 50
 gamma = .1
 
 #Batch size for training and epochs. If running experiments on single GPU (e.g., 2080ti),
@@ -105,7 +108,7 @@ gamma = .1
 #the recommended training batch size is 128 (as done in paper)
 #May need to reduce batch size if CUDA out of memory issue occurs
 batch_size = {'train': 128, 'val': 256, 'test': 256}
-num_epochs = 20
+num_epochs = 100
 
 #Resize the image before center crop. Recommended values for resize is 256 (used in paper), 384,
 #and 512 (from http://openaccess.thecvf.com/content_cvpr_2018/papers/Xue_Deep_Texture_Manifold_CVPR_2018_paper.pdf)
@@ -187,7 +190,7 @@ Model_names = {'DTD': 'resnet50',
                'MINC_2500': 'resnet50',
                'GTOS-mobile': 'resnet18',
                'mnist': 'resnet18',
-               'fashiomnist': 'resnet18',
+               'fashionmnist': 'resnet18',
                'cifar10': 'resnet50',
                'cifar100': 'resnet50'}
 
@@ -204,8 +207,8 @@ num_classes = {'DTD': 47,
 Splits = {'DTD': 5, 
           'MINC_2500': 5,
           'GTOS-mobile': 10,
-          'mnist': 1,
-          'fashiomnist': 1,
+          'mnist': 10,
+          'fashionmnist': 10,
           'cifar10': 1,
           'cifar100': 1}
 
@@ -215,7 +218,8 @@ data_dir = Data_dirs[Dataset]
 Hist_model_name = 'HistRes_' + str(numBins)
 
 #Return dictionary of parameters
-Network_parameters = {'save_results': save_results,'folder': folder, 
+Network_parameters = {'GPU_Num': gpu,
+                      'save_results': save_results,'folder': folder, 
                       'histogram': histogram,'Dataset': Dataset, 'data_dir': data_dir,
                       'num_workers': num_workers, 'mode': mode,'new_lr': new_lr, 
                       'pt_lr': pt_lr,'momentum': alpha, 'step_size': step_size,
