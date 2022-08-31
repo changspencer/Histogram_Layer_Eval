@@ -32,10 +32,10 @@ val_split = True
 Parallelize_model = True
 
 #Main GPU to use
-gpu = 2
+gpu = 3
 
 #Select dataset. Set to number of desired texture dataset
-data_selection = 0
+data_selection = 5
 Dataset_names = { 0: 'mnist', 1: 'DTD', 2: 'GTOS-mobile', 3: 'MINC_2500',
                   4: 'fashionmnist', 5: 'cifar10', 6: 'cifar100'}
 
@@ -66,7 +66,7 @@ scale = 5
 #Recommended values are to have the new layers at 
 #a learning rate 10 times larger than the pt learning rate.
 #e.g., new_lr = .001 and pt_lr = .01
-pt_lr = .001
+pt_lr = .1
 new_lr = .1
 
 #Set momentum for SGD optimizer. 
@@ -100,7 +100,7 @@ normalize_bins = True
 
 #Set step_size and decay rate for scheduler
 #In paper, learning rate was decayed factor of .1 every ten epochs (recommended)
-step_size = 50
+step_size = 100
 gamma = .1
 
 #Batch size for training and epochs. If running experiments on single GPU (e.g., 2080ti),
@@ -108,7 +108,7 @@ gamma = .1
 #the recommended training batch size is 128 (as done in paper)
 #May need to reduce batch size if CUDA out of memory issue occurs
 batch_size = {'train': 128, 'val': 256, 'test': 256}
-num_epochs = 100
+num_epochs = 350
 
 #Resize the image before center crop. Recommended values for resize is 256 (used in paper), 384,
 #and 512 (from http://openaccess.thecvf.com/content_cvpr_2018/papers/Xue_Deep_Texture_Manifold_CVPR_2018_paper.pdf)
@@ -191,7 +191,7 @@ Model_names = {'DTD': 'resnet50',
                'GTOS-mobile': 'resnet18',
                'mnist': 'resnet18',
                'fashionmnist': 'resnet18',
-               'cifar10': 'resnet50',
+               'cifar10': 'resnet18',
                'cifar100': 'resnet50'}
 
 #Number of classes in each dataset
