@@ -92,6 +92,10 @@ def train_model(model, dataloaders, criterion, optimizer, device,
                         #save bins and widths
                         saved_bins[epoch+1,:] = model.histogram_layer.centers.detach().cpu().numpy()
                         saved_widths[epoch+1,:] = model.histogram_layer.widths.reshape(-1).detach().cpu().numpy()
+            # # TODO - Reload the best model weights when stepping the LR down
+            # # Start the model back at its best location so far...
+            # model.load_state_dict(best_model_wts)
+
             # deep copy the model
             if phase == 'val' and epoch_acc > best_acc:
                 best_epoch = epoch
@@ -208,7 +212,7 @@ def initialize_model(model_name, num_classes,in_channels,out_channels,
             
             if dataset == 'mnist' or dataset == 'fashionmnist':
                 input_size = 28
-                self.model_ft.conv1 = nn.Conv2d(1, self.backbone.inplanes,
+                model_ft.conv1 = nn.Conv2d(1, model_ft.conv1.out_channels,
                         kernel_size=3, stride=1, padding=1, bias=False)
     
         elif model_name == "resnet50":
@@ -222,7 +226,7 @@ def initialize_model(model_name, num_classes,in_channels,out_channels,
 
             if dataset == 'mnist' or dataset == 'fashionmnist':
                 input_size = 28
-                self.model_ft.conv1 = nn.Conv2d(1, self.backbone.inplanes,
+                model_ft.conv1 = nn.Conv2d(1, model_ft.conv1.out_channels,
                         kernel_size=3, stride=1, padding=1, bias=False)
     # TODO - Change this to be dependent on the dataset parameters 
     input_size = 28
