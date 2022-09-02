@@ -133,7 +133,8 @@ for split in range(0, numRuns):
                     {'params': model_ft.histogram_layer.parameters(), 'lr': Network_parameters['new_lr']},
                     {'params': model_ft.fc.parameters(), 'lr': Network_parameters['new_lr']},
                     {'params': model_ft.bn_norm.parameters(), 'lr': Network_parameters['new_lr']}
-                ], lr=Network_parameters['pt_lr'], momentum=Network_parameters['momentum'])
+                ], lr=Network_parameters['pt_lr'], momentum=Network_parameters['momentum'],
+            weight_decay=Network_parameters['wgt_decay'])
         else:
             optimizer_ft = optim.SGD([
                     {'params': model_ft.backbone.conv1.parameters()},
@@ -144,7 +145,8 @@ for split in range(0, numRuns):
                     {'params': model_ft.backbone.layer4.parameters()},                
                     {'params': model_ft.histogram_layer.parameters(), 'lr': Network_parameters['new_lr']},
                     {'params': model_ft.fc.parameters(), 'lr': Network_parameters['new_lr']},
-                ], lr=Network_parameters['pt_lr'], momentum=Network_parameters['momentum'])
+                ], lr=Network_parameters['pt_lr'], momentum=Network_parameters['momentum'],
+            weight_decay=Network_parameters['wgt_decay'])
     else:
         saved_bins = None
         saved_widths = None
@@ -157,7 +159,8 @@ for split in range(0, numRuns):
                 {'params': model_ft.layer3.parameters()},
                 {'params': model_ft.layer4.parameters()},
                 {'params': model_ft.fc.parameters(), 'lr': Network_parameters['new_lr']},
-            ], lr=Network_parameters['pt_lr'], momentum = Network_parameters['momentum'])
+            ], lr=Network_parameters['pt_lr'], momentum = Network_parameters['momentum'],
+            weight_decay=Network_parameters['wgt_decay'])
    
     # Setup the loss fxn
     criterion = nn.CrossEntropyLoss()

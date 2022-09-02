@@ -5,6 +5,7 @@ Parameters for histogram layer experiments
 Only change parameters in this file before running
 demo.py
 @author: jpeeples 
+@edits: changspencer
 """
 
 ######## ONLY CHANGE PARAMETERS BELOW ########
@@ -99,16 +100,18 @@ normalize_count = True
 normalize_bins = True
 
 #Set step_size and decay rate for scheduler
-#In paper, learning rate was decayed factor of .1 every ten epochs (recommended)
+#In Josh's OG paper, learning rate was decayed factor of .1 every ten epochs (recommended)
+#My addition: Weight decay (L2 penalty)
 step_size = 100
 gamma = .1
+wgt_decay = 5e-5
 
 #Batch size for training and epochs. If running experiments on single GPU (e.g., 2080ti),
 #training batch size is recommended to be 64. If using at least two GPUs, 
 #the recommended training batch size is 128 (as done in paper)
 #May need to reduce batch size if CUDA out of memory issue occurs
 batch_size = {'train': 128, 'val': 256, 'test': 256}
-num_epochs = 350
+num_epochs = 250
 
 #Resize the image before center crop. Recommended values for resize is 256 (used in paper), 384,
 #and 512 (from http://openaccess.thecvf.com/content_cvpr_2018/papers/Xue_Deep_Texture_Manifold_CVPR_2018_paper.pdf)
@@ -223,7 +226,7 @@ Network_parameters = {'GPU_Num': gpu,
                       'histogram': histogram,'Dataset': Dataset, 'data_dir': data_dir,
                       'num_workers': num_workers, 'mode': mode,'new_lr': new_lr, 
                       'pt_lr': pt_lr,'momentum': alpha, 'step_size': step_size,
-                      'gamma': gamma, 'batch_size' : batch_size, 
+                      'gamma': gamma, 'batch_size' : batch_size, 'wgt_decay': wgt_decay,
                       'num_epochs': num_epochs, 'resize_size': resize_size, 
                       'center_size': center_size, 'padding': padding, 
                       'stride': stride, 'kernel_size': kernel_size,
