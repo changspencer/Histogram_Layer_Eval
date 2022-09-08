@@ -21,10 +21,12 @@ from Datasets.MINC_2500 import MINC_2500_data
 from Datasets.GTOS_mobile_single_size import GTOS_mobile_single_data
 
 
-def Prepare_DataLoaders(Network_parameters, split,input_size=224):
+def Prepare_DataLoaders(Network_parameters, split,input_size=224, comet_exp=None):
     
     Dataset = Network_parameters['Dataset']
     data_dir = Network_parameters['data_dir']
+    # For Comet ML logging
+    dataset_info = {"Dataset": Dataset}
     
     # Data augmentation and normalization for training
     # Just normalization and resize for test
@@ -83,7 +85,13 @@ def Prepare_DataLoaders(Network_parameters, split,input_size=224):
             validation_dataset = DTD_data(data_dir, data = 'val',
                                                numset = split + 1,
                                                img_transform=data_transforms['train'])
-            train_dataset = torch.utils.data.ConcatDataset((train_dataset,validation_dataset))  
+            train_dataset = torch.utils.data.ConcatDataset((train_dataset,validation_dataset))
+
+            dataset_info['Train_Transform'] = data_transforms['train']
+            dataset_info['Test-Val_Transform'] = data_transforms['val']
+            dataset_info['Dataset_Sizes'] = [len(train_dataset),
+                                             len(validation_dataset),
+                                             len(test_dataset)]
         
     elif Dataset == 'MINC_2500':
         train_dataset = MINC_2500_data(data_dir, data='train',
@@ -97,6 +105,12 @@ def Prepare_DataLoaders(Network_parameters, split,input_size=224):
         test_dataset = MINC_2500_data(data_dir, data = 'test',
                                            numset = split + 1,
                                            img_transform=data_transforms['val'])
+
+        dataset_info['Train_Transform'] = data_transforms['train']
+        dataset_info['Test-Val_Transform'] = data_transforms['val']
+        dataset_info['Dataset_Sizes'] = [len(train_dataset),
+                                         len(validation_dataset),
+                                         len(test_dataset)]
     elif Dataset == 'GTOS-mobile':
         # Create training and test datasets
         dataset = GTOS_mobile_single_data(data_dir, train = True,
@@ -118,16 +132,22 @@ def Prepare_DataLoaders(Network_parameters, split,input_size=224):
         validation_dataset = torch.utils.data.Subset(dataset, val_indices[split])
         test_dataset = GTOS_mobile_single_data(data_dir, train = False,
                                            img_transform=data_transforms['val'])
+
+        dataset_info['Train_Transform'] = data_transforms['train']
+        dataset_info['Test-Val_Transform'] = data_transforms['val']
+        dataset_info['Dataset_Sizes'] = [len(train_dataset),
+                                         len(validation_dataset),
+                                         len(test_dataset)]
     elif Dataset == 'mnist':
         mnist_tr = transforms.Compose([
             transforms.ToTensor(),
             transforms.Normalize([0.1307], [0.3081])
         ])
-        tr_dataset = datasets.MNIST(data_dir, train=True,
+        train_dataset = datasets.MNIST(data_dir, train=True,
                                     transform=mnist_tr,
                                     download=True)
-        X = np.ones(len(tr_dataset))
-        Y = tr_dataset.targets
+        X = np.ones(len(train_dataset))
+        Y = train_dataset.targets
         train_indices = []
         val_indices = []
     
@@ -140,12 +160,18 @@ def Prepare_DataLoaders(Network_parameters, split,input_size=224):
              train_indices.append(train_index)
              val_indices.append(val_index)
         
-        train_dataset = Subset_Wrapper(tr_dataset, train_indices[split])
-        validation_dataset = Subset_Wrapper(tr_dataset, val_indices[split])
+        train_dataset = Subset_Wrapper(train_dataset, train_indices[split])
+        validation_dataset = Subset_Wrapper(train_dataset, val_indices[split])
         test_dataset = datasets.MNIST(data_dir, train=False,
                                       transform=mnist_tr,
                                       download=True)
         test_dataset = Subset_Wrapper(test_dataset, np.random.permutation(len(test_dataset)))
+
+        dataset_info['Train_Transform'] = mnist_tr
+        dataset_info['Test-Val_Transform'] = mnist_tr
+        dataset_info['Dataset_Sizes'] = [len(train_dataset),
+                                         len(validation_dataset),
+                                         len(test_dataset)]
     elif Dataset == 'fashionmnist':
         fashion_tr = [
             transforms.ToTensor(),
@@ -155,11 +181,11 @@ def Prepare_DataLoaders(Network_parameters, split,input_size=224):
             transforms.RandomCrop(28, padding=4),
             transforms.RandomHorizontalFlip()
         ]
-        tr_dataset = datasets.FashionMNIST(data_dir, train=True,
+        train_dataset = datasets.FashionMNIST(data_dir, train=True,
                                            transform=transforms.Compose(fashion_tr+extra_tr),
                                            download=True)
-        X = np.ones(len(tr_dataset))
-        Y = tr_dataset.targets
+        X = np.ones(len(train_dataset))
+        Y = train_dataset.targets
         train_indices = []
         val_indices = []
     
@@ -172,12 +198,18 @@ def Prepare_DataLoaders(Network_parameters, split,input_size=224):
              train_indices.append(train_index)
              val_indices.append(val_index)
         
-        train_dataset = Subset_Wrapper(tr_dataset, train_indices[split])
-        validation_dataset = Subset_Wrapper(tr_dataset, val_indices[split])
+        train_dataset = Subset_Wrapper(train_dataset, train_indices[split])
+        validation_dataset = Subset_Wrapper(train_dataset, val_indices[split])
         test_dataset = datasets.FashionMNIST(data_dir, train=False,
                                              transform=transforms.Compose(fashion_tr),
                                              download=True)
         test_dataset = Subset_Wrapper(test_dataset, np.random.permutation(len(test_dataset)))
+
+        dataset_info['Train_Transform'] = fashion_tr + extra_tr
+        dataset_info['Test-Val_Transform'] = fashion_tr
+        dataset_info['Dataset_Sizes'] = [len(train_dataset),
+                                         len(validation_dataset),
+                                         len(test_dataset)]
     elif Dataset == 'cifar10':
         cifar10_tr = [
             transforms.ToTensor(),
@@ -188,11 +220,11 @@ def Prepare_DataLoaders(Network_parameters, split,input_size=224):
             transforms.RandomCrop(32, padding=4),
             transforms.RandomHorizontalFlip()
         ]
-        tr_dataset = datasets.CIFAR10(data_dir, train=True,
+        train_dataset = datasets.CIFAR10(data_dir, train=True,
                                       transform=transforms.Compose(cifar10_tr + extra_tr),
                                       download=True)
-        X = np.ones(len(tr_dataset))
-        Y = tr_dataset.targets
+        X = np.ones(len(train_dataset))
+        Y = train_dataset.targets
         train_indices = []
         val_indices = []
     
@@ -203,12 +235,18 @@ def Prepare_DataLoaders(Network_parameters, split,input_size=224):
              train_indices.append(train_index)
              val_indices.append(val_index)
         
-        train_dataset = Subset_Wrapper(tr_dataset, train_indices[0])
-        validation_dataset = Subset_Wrapper(tr_dataset, val_indices[0])
+        train_dataset = Subset_Wrapper(train_dataset, train_indices[0])
+        validation_dataset = Subset_Wrapper(train_dataset, val_indices[0])
         test_dataset = datasets.CIFAR10(data_dir, train=False,
                                         transform=transforms.Compose(cifar10_tr),
                                         download=True)
         test_dataset = Subset_Wrapper(test_dataset, np.random.permutation(len(test_dataset)))
+
+        dataset_info['Train_Transform'] = cifar10_tr + extra_tr
+        dataset_info['Test-Val_Transform'] = fashion_tr
+        dataset_info['Dataset_Sizes'] = [len(train_dataset),
+                                         len(validation_dataset),
+                                         len(test_dataset)]
     elif Dataset == 'cifar100':
         cifar100_tr = [
             transforms.ToTensor(),
@@ -220,11 +258,11 @@ def Prepare_DataLoaders(Network_parameters, split,input_size=224):
             transforms.RandomHorizontalFlip(),
             transforms.RandomRotation(15)
         ]
-        tr_dataset = datasets.CIFAR100(data_dir, train=True,
+        train_dataset = datasets.CIFAR100(data_dir, train=True,
                                        transform=transforms.Compose(cifar100_tr + extra_tr),
                                        download=True)
-        X = np.ones(len(tr_dataset))
-        Y = tr_dataset.targets
+        X = np.ones(len(train_dataset))
+        Y = train_dataset.targets
         train_indices = []
         val_indices = []
     
@@ -235,12 +273,18 @@ def Prepare_DataLoaders(Network_parameters, split,input_size=224):
              train_indices.append(train_index)
              val_indices.append(val_index)
         
-        train_dataset = Subset_Wrapper(tr_dataset, train_indices[0])
-        validation_dataset = Subset_Wrapper(tr_dataset, val_indices[0])
+        train_dataset = Subset_Wrapper(train_dataset, train_indices[0])
+        validation_dataset = Subset_Wrapper(train_dataset, val_indices[0])
         test_dataset = datasets.CIFAR100(data_dir, train=False,
                                          transform=transforms.Compose(cifar100_tr),
                                          download=True)
         test_dataset = Subset_Wrapper(test_dataset, np.random.permutation(len(test_dataset)))
+
+        dataset_info['Train_Transform'] = cifar100_tr + extra_tr
+        dataset_info['Test-Val_Transform'] = fashion_tr
+        dataset_info['Dataset_Sizes'] = [len(train_dataset),
+                                         len(validation_dataset),
+                                         len(test_dataset)]
 
     #Do train/val/test split or train/test split only (validating on test data)    
     if Network_parameters['val_split']:
@@ -256,5 +300,7 @@ def Prepare_DataLoaders(Network_parameters, split,input_size=224):
                                                        shuffle=True, 
                                                        num_workers=Network_parameters['num_workers'],
                                                        pin_memory=Network_parameters['pin_memory']) for x in ['train', 'val','test']}
-    
+    if comet_exp is not None:
+        comet_exp.log_others(dataset_info)
+
     return dataloaders_dict

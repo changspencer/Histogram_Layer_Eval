@@ -36,7 +36,7 @@ Parallelize_model = True
 gpu = 3
 
 #Select dataset. Set to number of desired texture dataset
-data_selection = 5
+data_selection = 0
 Dataset_names = { 0: 'mnist', 1: 'DTD', 2: 'GTOS-mobile', 3: 'MINC_2500',
                   4: 'fashionmnist', 5: 'cifar10', 6: 'cifar100'}
 
@@ -104,14 +104,14 @@ normalize_bins = True
 #My addition: Weight decay (L2 penalty)
 step_size = 100
 gamma = .1
-wgt_decay = 5e-5
+wgt_decay = 1e-4
 
 #Batch size for training and epochs. If running experiments on single GPU (e.g., 2080ti),
 #training batch size is recommended to be 64. If using at least two GPUs, 
 #the recommended training batch size is 128 (as done in paper)
 #May need to reduce batch size if CUDA out of memory issue occurs
 batch_size = {'train': 128, 'val': 256, 'test': 256}
-num_epochs = 250
+num_epochs = 2
 
 #Resize the image before center crop. Recommended values for resize is 256 (used in paper), 384,
 #and 512 (from http://openaccess.thecvf.com/content_cvpr_2018/papers/Xue_Deep_Texture_Manifold_CVPR_2018_paper.pdf)

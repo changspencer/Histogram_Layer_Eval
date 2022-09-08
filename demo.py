@@ -29,6 +29,20 @@ from Utils.Save_Results import save_results, save_params
 from Demo_Parameters import Network_parameters
 from Prepare_Data import Prepare_DataLoaders
 
+# Comet ML logging package
+try:
+    from comet_ml import Experiment
+except:
+    Experiment = None
+
+if Experiment is None:
+    experiment = None
+else:  # Not yet sure whether to also use this for logging HistRes inits
+    experiment = Experiment(
+        api_key="cf2AdIgBb4jLjQZHyCyWoo2k2",
+        project_name="general",
+        workspace="changspencer",
+    )
 
 #Name of dataset
 Dataset = Network_parameters['Dataset']
@@ -58,7 +72,11 @@ current_directory = os.getcwd()
 final_directory = os.path.join(current_directory, Network_parameters['folder'])
 
 print('Starting Experiments...')
-save_params(Network_parameters)
+if experiment is not None:
+    experiment.log_parameters(Network_parameters)
+    save_params(Network_parameters)
+else:
+    save_params(Network_parameters)
 # exit()  # For debugging purposes
 
 for split in range(0, numRuns):
@@ -86,7 +104,7 @@ for split in range(0, numRuns):
     else:
         raise RuntimeError('Invalid type for histogram layer')
     
-    # Initialize the histogram model for this run
+    # Initialize the histogram model for this run - Include Comet logging here?
     model_ft, input_size = initialize_model(model_name, num_classes,
                                             Network_parameters['in_channels'][model_name],
                                             num_feature_maps, 
@@ -99,6 +117,10 @@ for split in range(0, numRuns):
                                             scale = Network_parameters['scale'],
                                             feat_map_size=feat_map_size,
                                             dataset=Dataset)
+
+    if experiment is not None:
+        experiment.set_model_graph(model_ft)
+
     # Send the model to GPU if available
     model_ft = model_ft.to(device)
     
@@ -108,7 +130,10 @@ for split in range(0, numRuns):
     print("Initializing Datasets and Dataloaders...")
     
     # Create training, validation, and test dataloaders
-    dataloaders_dict = Prepare_DataLoaders(Network_parameters,split,input_size=input_size)
+    dataloaders_dict = Prepare_DataLoaders(Network_parameters,
+                                           split,
+                                           input_size=input_size,
+                                           comet_exp=experiment)
     
     #Save the initial values for bins and widths of histogram layer
     #Set optimizer for model
@@ -171,10 +196,11 @@ for split in range(0, numRuns):
     # Train and evaluate
     train_dict = train_model(
             model_ft, dataloaders_dict, criterion, optimizer_ft, device,
-            saved_bins=saved_bins,saved_widths=saved_widths,histogram=Network_parameters['histogram'],
-            num_epochs=Network_parameters['num_epochs'],scheduler=scheduler,
-            dim_reduced=dim_reduced)
-    test_dict = test_model(dataloaders_dict['test'],model_ft,device)
+            saved_bins=saved_bins, saved_widths=saved_widths, histogram=Network_parameters['histogram'],
+            num_epochs=Network_parameters['num_epochs'], scheduler=scheduler,
+            dim_reduced=dim_reduced,
+            comet_exp=experiment)
+    test_dict = test_model(dataloaders_dict['test'], model_ft, device, comet_exp=experiment)
     
     # Save results
     if(Network_parameters['save_results']):
@@ -186,3 +212,5 @@ for split in range(0, numRuns):
         print('**********Run ' + str(split + 1) + ' For ' + Network_parameters['hist_model'] + ' Finished**********') 
     else:
         print('**********Run ' + str(split + 1) + ' For GAP_' + model_name + ' Finished**********') 
+
+experiment.end()

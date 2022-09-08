@@ -7,3 +7,24 @@ Datasets/minc-2500/
 # Ignore saved model
 Saved_Models/
 HPG_code/
+__pycache__/Demo_Parameters.cpython-37.pyc
+__pycache__/Prepare_Data.cpython-37.pyc
+Datasets/__pycache__/__init__.cpython-37.pyc
+Datasets/__pycache__/DTD_loader.cpython-37.pyc
+Datasets/__pycache__/GTOS_mobile_single_size.cpython-37.pyc
+Datasets/__pycache__/MINC_2500.cpython-37.pyc
+Datasets/MNIST/processed/test.pt
+Datasets/MNIST/processed/training.pt
+Datasets/MNIST/raw/t10k-images-idx3-ubyte
+Datasets/MNIST/raw/t10k-images-idx3-ubyte.gz
+Datasets/MNIST/raw/t10k-labels-idx1-ubyte
+Datasets/MNIST/raw/t10k-labels-idx1-ubyte.gz
+Datasets/MNIST/raw/train-images-idx3-ubyte
+Datasets/MNIST/raw/train-images-idx3-ubyte.gz
+Datasets/MNIST/raw/train-labels-idx1-ubyte
+Datasets/MNIST/raw/train-labels-idx1-ubyte.gz
+Utils/__pycache__/Histogram_Model.cpython-37.pyc
+Utils/__pycache__/LinearHistogramPooling.cpython-37.pyc
+Utils/__pycache__/Network_functions.cpython-37.pyc
+Utils/__pycache__/RBFHistogramPooling.cpython-37.pyc
+Utils/__pycache__/Save_Results.cpython-37.pyc
