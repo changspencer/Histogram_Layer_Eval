@@ -128,8 +128,8 @@ def Prepare_DataLoaders(Network_parameters, split,input_size=224, comet_exp=None
              train_indices.append(train_index)
              val_indices.append(val_index)
         
-        train_dataset = torch.utils.data.Subset(dataset, train_indices[split])
         validation_dataset = torch.utils.data.Subset(dataset, val_indices[split])
+        train_dataset = torch.utils.data.Subset(dataset, train_indices[split])
         test_dataset = GTOS_mobile_single_data(data_dir, train = False,
                                            img_transform=data_transforms['val'])
 
@@ -160,8 +160,8 @@ def Prepare_DataLoaders(Network_parameters, split,input_size=224, comet_exp=None
              train_indices.append(train_index)
              val_indices.append(val_index)
         
-        train_dataset = Subset_Wrapper(train_dataset, train_indices[split])
         validation_dataset = Subset_Wrapper(train_dataset, val_indices[split])
+        train_dataset = Subset_Wrapper(train_dataset, train_indices[split])
         test_dataset = datasets.MNIST(data_dir, train=False,
                                       transform=mnist_tr,
                                       download=True)
@@ -198,8 +198,8 @@ def Prepare_DataLoaders(Network_parameters, split,input_size=224, comet_exp=None
              train_indices.append(train_index)
              val_indices.append(val_index)
         
-        train_dataset = Subset_Wrapper(train_dataset, train_indices[split])
         validation_dataset = Subset_Wrapper(train_dataset, val_indices[split])
+        train_dataset = Subset_Wrapper(train_dataset, train_indices[split])
         test_dataset = datasets.FashionMNIST(data_dir, train=False,
                                              transform=transforms.Compose(fashion_tr),
                                              download=True)
@@ -235,15 +235,15 @@ def Prepare_DataLoaders(Network_parameters, split,input_size=224, comet_exp=None
              train_indices.append(train_index)
              val_indices.append(val_index)
         
-        train_dataset = Subset_Wrapper(train_dataset, train_indices[0])
         validation_dataset = Subset_Wrapper(train_dataset, val_indices[0])
+        train_dataset = Subset_Wrapper(train_dataset, train_indices[0])
         test_dataset = datasets.CIFAR10(data_dir, train=False,
                                         transform=transforms.Compose(cifar10_tr),
                                         download=True)
         test_dataset = Subset_Wrapper(test_dataset, np.random.permutation(len(test_dataset)))
 
         dataset_info['Train_Transform'] = cifar10_tr + extra_tr
-        dataset_info['Test-Val_Transform'] = fashion_tr
+        dataset_info['Test-Val_Transform'] = cifar10_tr
         dataset_info['Dataset_Sizes'] = [len(train_dataset),
                                          len(validation_dataset),
                                          len(test_dataset)]
@@ -272,16 +272,16 @@ def Prepare_DataLoaders(Network_parameters, split,input_size=224, comet_exp=None
         for train_index, val_index in sss.split(X, Y):
              train_indices.append(train_index)
              val_indices.append(val_index)
-        
-        train_dataset = Subset_Wrapper(train_dataset, train_indices[0])
+
         validation_dataset = Subset_Wrapper(train_dataset, val_indices[0])
+        train_dataset = Subset_Wrapper(train_dataset, train_indices[0])
         test_dataset = datasets.CIFAR100(data_dir, train=False,
                                          transform=transforms.Compose(cifar100_tr),
                                          download=True)
         test_dataset = Subset_Wrapper(test_dataset, np.random.permutation(len(test_dataset)))
 
         dataset_info['Train_Transform'] = cifar100_tr + extra_tr
-        dataset_info['Test-Val_Transform'] = fashion_tr
+        dataset_info['Test-Val_Transform'] = cifar100_tr
         dataset_info['Dataset_Sizes'] = [len(train_dataset),
                                          len(validation_dataset),
                                          len(test_dataset)]
