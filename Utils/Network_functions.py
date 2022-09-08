@@ -24,7 +24,7 @@ from barbar import Bar
 def train_model(model, dataloaders, criterion, optimizer, device,
                           saved_bins=None, saved_widths=None, histogram=True,
                           num_epochs=25, scheduler=None, dim_reduced=True,
-                          comet_exp=None):
+                          comet_exp=None, split=0):
     since = time.time()
 
     val_acc_history = []
@@ -102,11 +102,13 @@ def train_model(model, dataloaders, criterion, optimizer, device,
                     #save bins and widths
                     saved_bins[epoch+1,:] = model.histogram_layer.centers.detach().cpu().numpy()
                     saved_widths[epoch+1,:] = model.histogram_layer.widths.reshape(-1).detach().cpu().numpy()
+
                 if exp is not None:
                     comet_exp.log_others({
                         "histo_bins": saved_bins[epoch + 1, :],
                         "histo_widths": saved_widths[epoch + 1, :]
                     })
+
             print('\ntrain Loss: {:.4f} Acc: {:.4f}\n'.format(epoch_loss, epoch_acc))
             if exp is not None:
                 comet_exp.log_metrics({
@@ -120,6 +122,8 @@ def train_model(model, dataloaders, criterion, optimizer, device,
             
             running_loss = 0.0
             running_corrects = 0
+            running_preds = []
+            running_targets = []
 
             # Iterate over data.
             for idx, (inputs, labels, index) in enumerate(Bar(val_dataloader)):
@@ -141,6 +145,8 @@ def train_model(model, dataloaders, criterion, optimizer, device,
                 # statistics
                 running_loss += loss.item() * inputs.size(0)
                 running_corrects += torch.sum(preds == labels.data)
+                running_preds.extend(preds.cpu().detach().flatten().numpy())
+                running_targets.extend(labels.cpu().flatten().numpy())
         
             epoch_loss = running_loss / (len(val_dataloader.sampler))
             epoch_acc = running_corrects.double() / (len(val_dataloader.sampler))
@@ -150,6 +156,7 @@ def train_model(model, dataloaders, criterion, optimizer, device,
                 best_epoch = epoch
                 best_acc = epoch_acc
                 best_model_wts = copy.deepcopy(model.state_dict())
+                print("Model Deep-copied")
 
             val_error_history.append(epoch_loss)
             val_acc_history.append(epoch_acc)
@@ -163,8 +170,24 @@ def train_model(model, dataloaders, criterion, optimizer, device,
 
     time_elapsed = time.time() - since
     print('Training complete in {:.0f}m {:.0f}s'.format(time_elapsed // 60, time_elapsed % 60))
-    print('Best val Acc: {:4f}'.format(best_acc))
-    print()
+    print('Best val Acc: {:4f}'.format(best_acc), end='\n\n')
+
+    if exp is not None:
+        def index_to_example(index):
+            # copied from comet.com tutorial "Image Data"
+            image_array = val_dataloader.dataset.dataset[index][0]
+            image_name = f"val-confusion-matrix-{split}-{index:5d}.png"
+            results = comet_exp.log_image(image_array, name=image_name)
+        
+            # Return sample, assetId (index is added automatically)
+            return {"sample": image_name, "assetId": results["imageId"]}
+
+        comet_exp.log_confusion_matrix(
+            y_true=running_targets,
+            y_predicted=running_preds,
+            index_to_example_function=index_to_example,
+            file_name=f'final_val_confusion_mat_s{split}.json'
+        )
 
     # load best model weights
     model.load_state_dict(best_model_wts)

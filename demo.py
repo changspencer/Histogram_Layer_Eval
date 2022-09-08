@@ -35,15 +35,6 @@ try:
 except:
     Experiment = None
 
-if Experiment is None:
-    experiment = None
-else:  # Not yet sure whether to also use this for logging HistRes inits
-    experiment = Experiment(
-        api_key="cf2AdIgBb4jLjQZHyCyWoo2k2",
-        project_name="general",
-        workspace="changspencer",
-    )
-
 #Name of dataset
 Dataset = Network_parameters['Dataset']
 
@@ -71,15 +62,30 @@ device = torch.device(f"cuda:{gpu_dev}" if torch.cuda.is_available() else "cpu")
 current_directory = os.getcwd()
 final_directory = os.path.join(current_directory, Network_parameters['folder'])
 
-print('Starting Experiments...')
-if experiment is not None:
-    experiment.log_parameters(Network_parameters)
-    save_params(Network_parameters)
-else:
-    save_params(Network_parameters)
-# exit()  # For debugging purposes
-
 for split in range(0, numRuns):
+
+    if Experiment is None:
+        experiment = None
+    else:  # Not yet sure whether to also use this for logging HistRes inits
+        if Network_parameters['histogram']:
+            proj_name = 'histogram-layer'
+        else:
+            proj_name = 'vanilla-layer'
+
+        experiment = Experiment(
+            api_key="cf2AdIgBb4jLjQZHyCyWoo2k2",
+            project_name=proj_name,
+            workspace="changspencer",
+        )
+        experiment.set_name(f"{Dataset}-{model_name}-{split+1}")
+    
+    print('Starting Experiments...')
+    if experiment is not None:
+        experiment.log_parameters(Network_parameters)
+        save_params(Network_parameters)
+    else:
+        save_params(Network_parameters)
+    # exit()  # For debugging purposes
     
     #Keep track of the bins and widths as these values are updated each
     #epoch
@@ -199,7 +205,7 @@ for split in range(0, numRuns):
             saved_bins=saved_bins, saved_widths=saved_widths, histogram=Network_parameters['histogram'],
             num_epochs=Network_parameters['num_epochs'], scheduler=scheduler,
             dim_reduced=dim_reduced,
-            comet_exp=experiment)
+            comet_exp=experiment, split=split)
     test_dict = test_model(dataloaders_dict['test'], model_ft, device, comet_exp=experiment)
     
     # Save results

@@ -19,7 +19,7 @@ folder = 'Saved_Models/'
 
 #Flag to use histogram model or baseline global average pooling (GAP)
 # Set to True to use histogram layer and False to use (only?) GAP model 
-histogram = False
+histogram = True
 
 #Select histogram layer type: RBF or Piecewise Linear. 
 #Recommended is RBF (implements histogram function in paper)
@@ -33,7 +33,7 @@ val_split = True
 Parallelize_model = True
 
 #Main GPU to use
-gpu = 3
+gpu = 2
 
 #Select dataset. Set to number of desired texture dataset
 data_selection = 0
@@ -111,7 +111,7 @@ wgt_decay = 1e-4
 #the recommended training batch size is 128 (as done in paper)
 #May need to reduce batch size if CUDA out of memory issue occurs
 batch_size = {'train': 128, 'val': 256, 'test': 256}
-num_epochs = 2
+num_epochs = 3
 
 #Resize the image before center crop. Recommended values for resize is 256 (used in paper), 384,
 #and 512 (from http://openaccess.thecvf.com/content_cvpr_2018/papers/Xue_Deep_Texture_Manifold_CVPR_2018_paper.pdf)
@@ -210,7 +210,7 @@ num_classes = {'DTD': 47,
 Splits = {'DTD': 5, 
           'MINC_2500': 5,
           'GTOS-mobile': 10,
-          'mnist': 10,
+          'mnist': 5,
           'fashionmnist': 10,
           'cifar10': 1,
           'cifar100': 1}
