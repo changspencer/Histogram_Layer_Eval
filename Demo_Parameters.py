@@ -19,7 +19,7 @@ folder = 'Saved_Models/'
 
 #Flag to use histogram model or baseline global average pooling (GAP)
 # Set to True to use histogram layer and False to use (only?) GAP model 
-histogram = True
+histogram = False
 
 #Select histogram layer type: RBF or Piecewise Linear. 
 #Recommended is RBF (implements histogram function in paper)
@@ -36,7 +36,7 @@ Parallelize_model = True
 gpu = 2
 
 #Select dataset. Set to number of desired texture dataset
-data_selection = 0
+data_selection = 5
 Dataset_names = { 0: 'mnist', 1: 'DTD', 2: 'GTOS-mobile', 3: 'MINC_2500',
                   4: 'fashionmnist', 5: 'cifar10', 6: 'cifar100'}
 
@@ -102,7 +102,7 @@ normalize_bins = True
 #Set step_size and decay rate for scheduler
 #In Josh's OG paper, learning rate was decayed factor of .1 every ten epochs (recommended)
 #My addition: Weight decay (L2 penalty)
-step_size = 100
+step_size = 5
 gamma = .1
 wgt_decay = 1e-4
 
@@ -111,7 +111,7 @@ wgt_decay = 1e-4
 #the recommended training batch size is 128 (as done in paper)
 #May need to reduce batch size if CUDA out of memory issue occurs
 batch_size = {'train': 128, 'val': 256, 'test': 256}
-num_epochs = 3
+num_epochs = 15
 
 #Resize the image before center crop. Recommended values for resize is 256 (used in paper), 384,
 #and 512 (from http://openaccess.thecvf.com/content_cvpr_2018/papers/Xue_Deep_Texture_Manifold_CVPR_2018_paper.pdf)
@@ -128,7 +128,7 @@ pin_memory = True
 num_workers = 0
 
 #Output feature map size after histogram layer
-feat_map_size = 1
+feat_map_size = 4
 
 #Flag for TSNE visuals, set to True to create TSNE visual of features
 #Set to false to not generate TSNE visuals

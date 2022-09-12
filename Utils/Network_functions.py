@@ -19,12 +19,13 @@ from torchvision import models
 ## Local external libraries
 from Utils.Histogram_Model import HistRes
 from barbar import Bar
+from PIL import Image
 
 
 def train_model(model, dataloaders, criterion, optimizer, device,
                           saved_bins=None, saved_widths=None, histogram=True,
                           num_epochs=25, scheduler=None, dim_reduced=True,
-                          comet_exp=None, split=0):
+                          comet_exp=None):
     since = time.time()
 
     val_acc_history = []
@@ -38,6 +39,27 @@ def train_model(model, dataloaders, criterion, optimizer, device,
     train_dataloader = dataloaders['train']
     val_dataloader = dataloaders['val']
     
+    if comet_exp is not None:
+        def index_to_example(index):
+            if not hasattr(val_dataloader.dataset, 'texture') and \
+               not hasattr(val_dataloader.dataset, 'texture_dir'):
+                # copied from comet.com tutorial "Image Data"
+                image_array = val_dataloader.dataset.dataset[index][0]
+                image_name = f"val-confusemat-{index:5d}.png"
+                results = comet_exp.log_image(image_array, name=image_name)
+        
+                # Return sample, assetId (index is added automatically)
+                return {"sample": image_name, "assetId": results["imageId"]}
+            else:
+                dir_name = val_dataloader.dataset.files[index]['img']
+                f_name = dir_name.split('/')[-1].split('.')[0]
+                img = Image.open(dir_name).convert('RGB')
+
+                image_name = f"val-matrix-sample-{f_name}.png"
+                results = comet_exp.log_image(img, name=image_name)
+
+                return {"sample": dir_name, "assetId": results["imageId"]}
+
     for epoch in range(num_epochs):
         print('Epoch {}/{}'.format(epoch, num_epochs - 1))
         print('-' * 10)
@@ -82,15 +104,6 @@ def train_model(model, dataloaders, criterion, optimizer, device,
             epoch_loss = running_loss / (len(dataloaders['train'].sampler))
             epoch_acc = running_corrects.double() / (len(dataloaders['train'].sampler))
             
-            if scheduler is not None:
-                scheduler.step()
-                # # TODO - Reload the best model weights when stepping the LR down
-                # # Start the model back at its best location so far...
-                # model.load_state_dict(best_model_wts)
-
-                if exp is not None:
-                    comet_exp.log_others(scheduler.state_dict())
-
             train_error_history.append(epoch_loss)
             train_acc_history.append(epoch_acc)
             if(histogram):
@@ -103,11 +116,12 @@ def train_model(model, dataloaders, criterion, optimizer, device,
                     saved_bins[epoch+1,:] = model.histogram_layer.centers.detach().cpu().numpy()
                     saved_widths[epoch+1,:] = model.histogram_layer.widths.reshape(-1).detach().cpu().numpy()
 
-                if exp is not None:
-                    comet_exp.log_others({
-                        "histo_bins": saved_bins[epoch + 1, :],
-                        "histo_widths": saved_widths[epoch + 1, :]
-                    })
+                print(saved_bins.shape)
+                # if exp is not None:
+                #     comet_exp.log_others({
+                #         "histo_bins": saved_bins[epoch + 1, :],
+                #         "histo_widths": saved_widths[epoch + 1, :]
+                #     })
 
             print('\ntrain Loss: {:.4f} Acc: {:.4f}\n'.format(epoch_loss, epoch_acc))
             if exp is not None:
@@ -142,6 +156,7 @@ def train_model(model, dataloaders, criterion, optimizer, device,
                     loss = criterion(outputs, labels)
     
                     _, preds = torch.max(outputs, 1)
+
                 # statistics
                 running_loss += loss.item() * inputs.size(0)
                 running_corrects += torch.sum(preds == labels.data)
@@ -158,6 +173,15 @@ def train_model(model, dataloaders, criterion, optimizer, device,
                 best_model_wts = copy.deepcopy(model.state_dict())
                 print("Model Deep-copied")
 
+            if exp is not None:
+                comet_exp.log_confusion_matrix(
+                    y_true=running_targets,
+                    y_predicted=running_preds,
+                    index_to_example_function=index_to_example,
+                    file_name=f'val_confusion_mat.json',
+                    step=epoch
+                )
+
             val_error_history.append(epoch_loss)
             val_acc_history.append(epoch_acc)
             print('\nval Loss: {:.4f} Acc: {:.4f}\n'.format(epoch_loss, epoch_acc))
@@ -168,25 +192,29 @@ def train_model(model, dataloaders, criterion, optimizer, device,
                     "epoch_acc": epoch_acc
                 }, epoch=epoch)
 
+        if scheduler is not None:
+            prev_lr = scheduler.state_dict()['_last_lr'][-1]
+            scheduler.step()
+            # Reload the best model weights when stepping the LR down
+            # Start the model back at its best location so far...
+            scheduler_state = scheduler.state_dict()
+            if (prev_lr - scheduler_state['_last_lr'][-1]) > 1e-8:
+                print('\nStepping Down LR...Reload best model\n')
+                model.load_state_dict(best_model_wts)
+
+            if comet_exp is not None:
+                comet_exp.log_others(scheduler.state_dict())
+
     time_elapsed = time.time() - since
     print('Training complete in {:.0f}m {:.0f}s'.format(time_elapsed // 60, time_elapsed % 60))
     print('Best val Acc: {:4f}'.format(best_acc), end='\n\n')
 
-    if exp is not None:
-        def index_to_example(index):
-            # copied from comet.com tutorial "Image Data"
-            image_array = val_dataloader.dataset.dataset[index][0]
-            image_name = f"val-confusion-matrix-{split}-{index:5d}.png"
-            results = comet_exp.log_image(image_array, name=image_name)
-        
-            # Return sample, assetId (index is added automatically)
-            return {"sample": image_name, "assetId": results["imageId"]}
-
+    if comet_exp is not None:
         comet_exp.log_confusion_matrix(
             y_true=running_targets,
             y_predicted=running_preds,
             index_to_example_function=index_to_example,
-            file_name=f'final_val_confusion_mat_s{split}.json'
+            file_name=f'final_val_confusion_mat.json'
         )
 
     # load best model weights
@@ -303,6 +331,7 @@ def initialize_model(model_name, num_classes,in_channels,out_channels,
                 model_ft.conv1 = nn.Conv2d(1, model_ft.conv1.out_channels,
                         kernel_size=3, stride=1, padding=1, bias=False)
     # TODO - Change this to be dependent on the dataset parameters 
-    input_size = 28
+    if dataset == 'mnist' or dataset == 'fashionmnist':
+        input_size = 27
     return model_ft, input_size
 

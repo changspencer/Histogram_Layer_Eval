@@ -205,7 +205,7 @@ for split in range(0, numRuns):
             saved_bins=saved_bins, saved_widths=saved_widths, histogram=Network_parameters['histogram'],
             num_epochs=Network_parameters['num_epochs'], scheduler=scheduler,
             dim_reduced=dim_reduced,
-            comet_exp=experiment, split=split)
+            comet_exp=experiment)
     test_dict = test_model(dataloaders_dict['test'], model_ft, device, comet_exp=experiment)
     
     # Save results
