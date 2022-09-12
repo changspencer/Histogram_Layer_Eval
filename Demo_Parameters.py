@@ -102,7 +102,7 @@ normalize_bins = True
 #Set step_size and decay rate for scheduler
 #In Josh's OG paper, learning rate was decayed factor of .1 every ten epochs (recommended)
 #My addition: Weight decay (L2 penalty)
-step_size = 5
+step_size = 100
 gamma = .1
 wgt_decay = 1e-4
 
@@ -111,7 +111,7 @@ wgt_decay = 1e-4
 #the recommended training batch size is 128 (as done in paper)
 #May need to reduce batch size if CUDA out of memory issue occurs
 batch_size = {'train': 128, 'val': 256, 'test': 256}
-num_epochs = 15
+num_epochs = 250
 
 #Resize the image before center crop. Recommended values for resize is 256 (used in paper), 384,
 #and 512 (from http://openaccess.thecvf.com/content_cvpr_2018/papers/Xue_Deep_Texture_Manifold_CVPR_2018_paper.pdf)
@@ -211,7 +211,7 @@ Splits = {'DTD': 5,
           'MINC_2500': 5,
           'GTOS-mobile': 10,
           'mnist': 5,
-          'fashionmnist': 10,
+          'fashionmnist': 5,
           'cifar10': 1,
           'cifar100': 1}
 

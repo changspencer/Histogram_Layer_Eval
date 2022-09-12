@@ -38,27 +38,34 @@ def train_model(model, dataloaders, criterion, optimizer, device,
 
     train_dataloader = dataloaders['train']
     val_dataloader = dataloaders['val']
-    
+
     if comet_exp is not None:
-        def index_to_example(index):
-            if not hasattr(val_dataloader.dataset, 'texture') and \
-               not hasattr(val_dataloader.dataset, 'texture_dir'):
-                # copied from comet.com tutorial "Image Data"
-                image_array = val_dataloader.dataset.dataset[index][0]
-                image_name = f"val-confusemat-{index:5d}.png"
-                results = comet_exp.log_image(image_array, name=image_name)
-        
-                # Return sample, assetId (index is added automatically)
-                return {"sample": image_name, "assetId": results["imageId"]}
-            else:
-                dir_name = val_dataloader.dataset.files[index]['img']
-                f_name = dir_name.split('/')[-1].split('.')[0]
-                img = Image.open(dir_name).convert('RGB')
+        conf_mat = comet_exp.create_confusion_matrix(max_categories=50)
+        # def index_to_example(index):
+        #     if not hasattr(val_dataloader.dataset, 'texture') and \
+        #        not hasattr(val_dataloader.dataset, 'texture_dir'):
+        #         # copied from comet.com tutorial "Image Data"
+        #         image_array = val_dataloader.dataset.dataset[index][0]
 
-                image_name = f"val-matrix-sample-{f_name}.png"
-                results = comet_exp.log_image(img, name=image_name)
+        #         if len(image_array.shape) == 3:
+        #             chan_pos = "first" if image_array.shape.index(
+        #                     min(image_array.shape)) == 0 else "last"
 
-                return {"sample": dir_name, "assetId": results["imageId"]}
+        #         image_name = f"val-confusemat-{index:5d}.png"
+        #         results = comet_exp.log_image(image_array, name=image_name,
+        #                                       image_channels=chan_pos)
+        # 
+        #         # Return sample, assetId (index is added automatically)
+        #         return {"sample": image_name, "assetId": results["imageId"]}
+        #     else:
+        #         dir_name = val_dataloader.dataset.files[index]['img']
+        #         f_name = dir_name.split('/')[-1].split('.')[0]
+        #         img = Image.open(dir_name).convert('RGB')
+
+        #         image_name = f"val-matrix-sample-{f_name}.png"
+        #         results = comet_exp.log_image(img, name=image_name)
+
+        #         return {"sample": dir_name, "assetId": results["imageId"]}
 
     for epoch in range(num_epochs):
         print('Epoch {}/{}'.format(epoch, num_epochs - 1))
@@ -141,6 +148,9 @@ def train_model(model, dataloaders, criterion, optimizer, device,
 
             # Iterate over data.
             for idx, (inputs, labels, index) in enumerate(Bar(val_dataloader)):
+                val_in = inputs if idx == 0 else torch.cat((val_in, inputs))
+                # val_labels = labels if idx == 0  else torch.concat((val_labels, labels))
+
                 inputs = inputs.to(device)
                 labels = labels.to(device)
                 index = index.to(device)
@@ -174,13 +184,24 @@ def train_model(model, dataloaders, criterion, optimizer, device,
                 print("Model Deep-copied")
 
             if exp is not None:
-                comet_exp.log_confusion_matrix(
-                    y_true=running_targets,
-                    y_predicted=running_preds,
-                    index_to_example_function=index_to_example,
-                    file_name=f'val_confusion_mat.json',
-                    step=epoch
+                old_shape = val_in.shape
+                new_shape = (old_shape[0], old_shape[2], old_shape[3], old_shape[1])
+                conf_mat.compute_matrix(running_targets, running_preds,
+                        images=val_in.permute((0, 2, 3, 1)),
                 )
+                comet_exp.log_confusion_matrix(
+                        matrix=conf_mat,
+                        step=epoch,
+                        title=f'Validation Confusion Mat, Epoch {epoch}',
+                        file_name=f'val_confusion_mat_{epoch:03d}.json'
+                )
+                # comet_exp.log_confusion_matrix(
+                #     y_true=running_targets,
+                #     y_predicted=running_preds,
+                #     index_to_example_function=index_to_example,
+                #     file_name=f'val_confusion_mat.json',
+                #     step=epoch
+                # )
 
             val_error_history.append(epoch_loss)
             val_acc_history.append(epoch_acc)
@@ -209,13 +230,13 @@ def train_model(model, dataloaders, criterion, optimizer, device,
     print('Training complete in {:.0f}m {:.0f}s'.format(time_elapsed // 60, time_elapsed % 60))
     print('Best val Acc: {:4f}'.format(best_acc), end='\n\n')
 
-    if comet_exp is not None:
-        comet_exp.log_confusion_matrix(
-            y_true=running_targets,
-            y_predicted=running_preds,
-            index_to_example_function=index_to_example,
-            file_name=f'final_val_confusion_mat.json'
-        )
+    # if comet_exp is not None:
+    #     comet_exp.log_confusion_matrix(
+    #         y_true=running_targets,
+    #         y_predicted=running_preds,
+    #         index_to_example_function=index_to_example,
+    #         file_name=f'final_val_confusion_mat.json'
+    #     )
 
     # load best model weights
     model.load_state_dict(best_model_wts)
