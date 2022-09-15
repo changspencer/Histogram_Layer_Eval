@@ -214,14 +214,15 @@ def Prepare_DataLoaders(Network_parameters, split,input_size=224, comet_exp=None
         cifar10_tr = [
             transforms.ToTensor(),
             transforms.Normalize([0.4914, 0.4822, 0.4465],
-                                 [0.2470, 0.2435, 0.2616]),
+                                 [0.2023, 0.1994, 0.2010]),
+                                 # [0.2470, 0.2435, 0.2616]),
         ]
         extra_tr = [
             transforms.RandomCrop(32, padding=4),
             transforms.RandomHorizontalFlip()
         ]
         train_dataset = datasets.CIFAR10(data_dir, train=True,
-                                      transform=transforms.Compose(cifar10_tr + extra_tr),
+                                      transform=transforms.Compose(extra_tr + cifar10_tr),
                                       download=True)
         X = np.ones(len(train_dataset))
         Y = train_dataset.targets
@@ -242,7 +243,7 @@ def Prepare_DataLoaders(Network_parameters, split,input_size=224, comet_exp=None
                                         download=True)
         test_dataset = Subset_Wrapper(test_dataset, np.random.permutation(len(test_dataset)))
 
-        dataset_info['Train_Transform'] = cifar10_tr + extra_tr
+        dataset_info['Train_Transform'] = extra_tr + cifar10_tr
         dataset_info['Test-Val_Transform'] = cifar10_tr
         dataset_info['Dataset_Sizes'] = [len(train_dataset),
                                          len(validation_dataset),

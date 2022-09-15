@@ -33,10 +33,10 @@ val_split = True
 Parallelize_model = True
 
 #Main GPU to use
-gpu = 2
+gpu = 1
 
 #Select dataset. Set to number of desired texture dataset
-data_selection = 5
+data_selection = 4
 Dataset_names = { 0: 'mnist', 1: 'DTD', 2: 'GTOS-mobile', 3: 'MINC_2500',
                   4: 'fashionmnist', 5: 'cifar10', 6: 'cifar100'}
 
@@ -99,12 +99,12 @@ parallel = True
 normalize_count = True
 normalize_bins = True
 
-#Set step_size and decay rate for scheduler
+#Set step_size and decay rate for scheduler (multistepLR)
 #In Josh's OG paper, learning rate was decayed factor of .1 every ten epochs (recommended)
 #My addition: Weight decay (L2 penalty)
 step_size = 100
 gamma = .1
-wgt_decay = 1e-4
+wgt_decay = 7.5e-5
 
 #Batch size for training and epochs. If running experiments on single GPU (e.g., 2080ti),
 #training batch size is recommended to be 64. If using at least two GPUs, 
@@ -125,10 +125,10 @@ pin_memory = True
 #Set number of workers, i.e., how many subprocesses to use for data loading.
 #Usually set to 0 or 1. Can set to more if multiple machines are used.
 #Number of workers for experiments for two GPUs was three
-num_workers = 0
+num_workers = 1
 
 #Output feature map size after histogram layer
-feat_map_size = 4
+feat_map_size = 1
 
 #Flag for TSNE visuals, set to True to create TSNE visual of features
 #Set to false to not generate TSNE visuals

@@ -83,6 +83,10 @@ class HistogramLayer(nn.Module):
             
         else:
             raise RuntimeError('Invalid dimension for histogram layer')
+
+        # Change initializations for the histogram mean values
+        nn.init.uniform(self.centers, a=-0.75, b=0.75)
+
         
     def forward(self,xx):
         ## xx is the input and is a torch.tensor

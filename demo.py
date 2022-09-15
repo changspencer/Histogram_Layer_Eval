@@ -198,6 +198,20 @@ for split in range(0, numRuns):
     scheduler = optim.lr_scheduler.StepLR(optimizer_ft,
                                           step_size=Network_parameters['step_size'],
                                           gamma= Network_parameters['gamma'])
+
+    # first_step = Network_parameters['step_size']
+    # sched_milestones = [
+    #     first_step,
+    #     first_step + first_step // 2,
+    #     first_step + first_step // 2 + first_step // 4
+    # ]
+    # scheduler = optim.lr_scheduler.MultiStepLR(optimizer_ft,
+    #                                       milestones=sched_milestones,
+    #                                       gamma=Network_parameters['gamma'])
+
+    # if Dataset == 'cifar10':  # TODO - Maybe try this later...
+    #     scheduler = optim.lr_scheduler.CosineAnnealingLR(optimizer_ft, T_max=125)
+    #     print("SCHEDULER IS COSINE ANNEALING WITH TMAX 125")
     
     # Train and evaluate
     train_dict = train_model(

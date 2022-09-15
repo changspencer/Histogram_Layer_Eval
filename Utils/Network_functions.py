@@ -39,33 +39,18 @@ def train_model(model, dataloaders, criterion, optimizer, device,
     train_dataloader = dataloaders['train']
     val_dataloader = dataloaders['val']
 
+    confuse_mat_step = num_epochs // 10  # Max of 10 Valid. Confusion mat's
+    confuse_mat_step = 1 if confuse_mat_step == 0 else confuse_mat_step
+
     if comet_exp is not None:
         conf_mat = comet_exp.create_confusion_matrix(max_categories=50)
-        # def index_to_example(index):
-        #     if not hasattr(val_dataloader.dataset, 'texture') and \
-        #        not hasattr(val_dataloader.dataset, 'texture_dir'):
-        #         # copied from comet.com tutorial "Image Data"
-        #         image_array = val_dataloader.dataset.dataset[index][0]
 
-        #         if len(image_array.shape) == 3:
-        #             chan_pos = "first" if image_array.shape.index(
-        #                     min(image_array.shape)) == 0 else "last"
-
-        #         image_name = f"val-confusemat-{index:5d}.png"
-        #         results = comet_exp.log_image(image_array, name=image_name,
-        #                                       image_channels=chan_pos)
-        # 
-        #         # Return sample, assetId (index is added automatically)
-        #         return {"sample": image_name, "assetId": results["imageId"]}
-        #     else:
-        #         dir_name = val_dataloader.dataset.files[index]['img']
-        #         f_name = dir_name.split('/')[-1].split('.')[0]
-        #         img = Image.open(dir_name).convert('RGB')
-
-        #         image_name = f"val-matrix-sample-{f_name}.png"
-        #         results = comet_exp.log_image(img, name=image_name)
-
-        #         return {"sample": dir_name, "assetId": results["imageId"]}
+        if saved_bins is not None and saved_widths is not None:
+            with comet_exp.train() as exp:
+                comet_exp.log_histogram_3d(saved_bins[0, :],
+                        name=f"histo_means", step=0)
+                comet_exp.log_histogram_3d(saved_widths[0, :],
+                    name=f"histo_widths", step=0)
 
     for epoch in range(num_epochs):
         print('Epoch {}/{}'.format(epoch, num_epochs - 1))
@@ -101,9 +86,6 @@ def train_model(model, dataloaders, criterion, optimizer, device,
                     loss.backward()
                     optimizer.step()
 
-                    # if exp is not None:
-                    #     comet_exp.log_metric(loss.item(), "batch_loss")
-    
                 # statistics
                 running_loss += loss.item() * inputs.size(0)
                 running_corrects += torch.sum(preds == labels.data)
@@ -123,12 +105,11 @@ def train_model(model, dataloaders, criterion, optimizer, device,
                     saved_bins[epoch+1,:] = model.histogram_layer.centers.detach().cpu().numpy()
                     saved_widths[epoch+1,:] = model.histogram_layer.widths.reshape(-1).detach().cpu().numpy()
 
-                print(saved_bins.shape)
-                # if exp is not None:
-                #     comet_exp.log_others({
-                #         "histo_bins": saved_bins[epoch + 1, :],
-                #         "histo_widths": saved_widths[epoch + 1, :]
-                #     })
+                if exp is not None:
+                    comet_exp.log_histogram_3d(saved_bins[epoch + 1, :],
+                            name=f"histo_means", step=epoch + 1)
+                    comet_exp.log_histogram_3d(saved_widths[epoch + 1, :],
+                        name=f"histo_widths", step=epoch + 1)
 
             print('\ntrain Loss: {:.4f} Acc: {:.4f}\n'.format(epoch_loss, epoch_acc))
             if exp is not None:
@@ -149,7 +130,6 @@ def train_model(model, dataloaders, criterion, optimizer, device,
             # Iterate over data.
             for idx, (inputs, labels, index) in enumerate(Bar(val_dataloader)):
                 val_in = inputs if idx == 0 else torch.cat((val_in, inputs))
-                # val_labels = labels if idx == 0  else torch.concat((val_labels, labels))
 
                 inputs = inputs.to(device)
                 labels = labels.to(device)
@@ -175,37 +155,19 @@ def train_model(model, dataloaders, criterion, optimizer, device,
         
             epoch_loss = running_loss / (len(val_dataloader.sampler))
             epoch_acc = running_corrects.double() / (len(val_dataloader.sampler))
+            
+            val_error_history.append(epoch_loss)
+            val_acc_history.append(epoch_acc)
 
             # deep copy the model
             if epoch_acc > best_acc:
                 best_epoch = epoch
                 best_acc = epoch_acc
                 best_model_wts = copy.deepcopy(model.state_dict())
-                print("Model Deep-copied")
-
-            if exp is not None:
-                old_shape = val_in.shape
-                new_shape = (old_shape[0], old_shape[2], old_shape[3], old_shape[1])
-                conf_mat.compute_matrix(running_targets, running_preds,
-                        images=val_in.permute((0, 2, 3, 1)),
-                )
-                comet_exp.log_confusion_matrix(
-                        matrix=conf_mat,
-                        step=epoch,
-                        title=f'Validation Confusion Mat, Epoch {epoch}',
-                        file_name=f'val_confusion_mat_{epoch:03d}.json'
-                )
-                # comet_exp.log_confusion_matrix(
-                #     y_true=running_targets,
-                #     y_predicted=running_preds,
-                #     index_to_example_function=index_to_example,
-                #     file_name=f'val_confusion_mat.json',
-                #     step=epoch
-                # )
-
-            val_error_history.append(epoch_loss)
-            val_acc_history.append(epoch_acc)
-            print('\nval Loss: {:.4f} Acc: {:.4f}\n'.format(epoch_loss, epoch_acc))
+                print('\nval Loss: {:.4f} Acc: {:.4f}'.format(epoch_loss, epoch_acc))
+                print(" --- Model Deep-copied --- \n")
+            else:
+                print('\nval Loss: {:.4f} Acc: {:.4f}\n'.format(epoch_loss, epoch_acc))
 
             if exp is not None:
                 comet_exp.log_metrics({
@@ -213,7 +175,24 @@ def train_model(model, dataloaders, criterion, optimizer, device,
                     "epoch_acc": epoch_acc
                 }, epoch=epoch)
 
+            if exp is not None and epoch % confuse_mat_step == 0:
+                # Comet ML experiment logging
+                conf_mat.compute_matrix(running_targets, running_preds,
+                        images=val_in.permute((0, 2, 3, 1)),
+                )
+
+                comet_exp.log_confusion_matrix(
+                        matrix=conf_mat,
+                        step=epoch,
+                        title=f'Validation Confusion Mat, Epoch {epoch}',
+                        file_name=f'val_confusion_mat_{epoch:03d}.json'
+                )
+
         if scheduler is not None:
+            # if comet_exp is not None and comet_exp.name.startswith("cifar10"):
+            #     prev_lr = scheduler._last_lr[0]
+            #     scheduler.step()  # Only call stepping for the CosineAnnealing Scheduler
+            # else:
             prev_lr = scheduler.state_dict()['_last_lr'][-1]
             scheduler.step()
             # Reload the best model weights when stepping the LR down
@@ -224,19 +203,11 @@ def train_model(model, dataloaders, criterion, optimizer, device,
                 model.load_state_dict(best_model_wts)
 
             if comet_exp is not None:
-                comet_exp.log_others(scheduler.state_dict())
+                comet_exp.log_metric("LR", prev_lr)
 
     time_elapsed = time.time() - since
     print('Training complete in {:.0f}m {:.0f}s'.format(time_elapsed // 60, time_elapsed % 60))
     print('Best val Acc: {:4f}'.format(best_acc), end='\n\n')
-
-    # if comet_exp is not None:
-    #     comet_exp.log_confusion_matrix(
-    #         y_true=running_targets,
-    #         y_predicted=running_preds,
-    #         index_to_example_function=index_to_example,
-    #         file_name=f'final_val_confusion_mat.json'
-    #     )
 
     # load best model weights
     model.load_state_dict(best_model_wts)
@@ -266,7 +237,9 @@ def test_model(dataloader, model, device, comet_exp=None):
     # Iterate over data
     print('Testing Model...')
     with torch.no_grad():
-        for idx, (inputs, labels,index) in enumerate(Bar(dataloader)):
+        for idx, (inputs, labels, index) in enumerate(Bar(dataloader)):
+            test_in = inputs if idx == 0 else torch.cat((test_in, inputs))
+
             inputs = inputs.to(device)
             labels = labels.to(device)
             index = index.to(device)
@@ -276,15 +249,26 @@ def test_model(dataloader, model, device, comet_exp=None):
             _, preds = torch.max(outputs, 1)
     
             #If test, accumulate labels for confusion matrix
-            GT = np.concatenate((GT,labels.detach().cpu().numpy()),axis=None)
-            Predictions = np.concatenate((Predictions,preds.detach().cpu().numpy()),axis=None)
-            Index = np.concatenate((Index,index.detach().cpu().numpy()),axis=None)
+            GT = np.concatenate((GT, labels.detach().cpu().numpy()), axis=None)
+            Predictions = np.concatenate((Predictions, preds.detach().cpu().numpy()), axis=None)
+            Index = np.concatenate((Index, index.detach().cpu().numpy()), axis=None)
             
-        
             running_corrects += torch.sum(preds == labels.data)
 
     test_acc = running_corrects.double() / (len(dataloader.sampler))
     print('Test Accuracy: {:4f}'.format(test_acc))
+
+    if comet_exp is not None:
+        comet_exp.log_metric("test_accuracy", test_acc)
+        conf_mat = comet_exp.create_confusion_matrix(max_categories=50)
+        conf_mat.compute_matrix(GT[1:].flatten(), Predictions[1:].flatten(),
+                images=test_in.permute((0, 2, 3, 1)),
+        )
+        comet_exp.log_confusion_matrix(
+                matrix=conf_mat,
+                title=f'Test Confusion Mat',
+                file_name=f'test_confusion_mat.json'
+        )
     
     test_dict = {'GT': GT[1:], 'Predictions': Predictions[1:], 'Index':Index[1:],
                  'test_acc': np.round(test_acc.cpu().numpy()*100,2)}
@@ -322,6 +306,12 @@ def initialize_model(model_name, num_classes,in_channels,out_channels,
         model_ft.fc = nn.Linear(num_ftrs, num_classes)
         input_size = 224
 
+        # Change this to be dependent on the dataset parameters 
+        if dataset == 'mnist' or dataset == 'fashionmnist':
+            input_size = 28
+        elif dataset == 'cifar10':
+            input_size = 32
+
     # Baseline model
     else:
         if model_name == "resnet18":
@@ -334,9 +324,17 @@ def initialize_model(model_name, num_classes,in_channels,out_channels,
             input_size = 224
             
             if dataset == 'mnist' or dataset == 'fashionmnist':
-                input_size = 28
                 model_ft.conv1 = nn.Conv2d(1, model_ft.conv1.out_channels,
                         kernel_size=3, stride=1, padding=1, bias=False)
+                # ResNet 18 for Github/kuangliu removes maxpool
+                model_ft.maxpool = nn.Identity()
+                input_size = 28
+            elif dataset == 'cifar10':
+                model_ft.conv1 = nn.Conv2d(3, model_ft.conv1.out_channels,
+                        kernel_size=3, stride=1, padding=1, bias=False)
+                # ResNet 18 for Github/kuangliu removes maxpool
+                model_ft.maxpool = nn.Identity()
+                input_size = 32
     
         elif model_name == "resnet50":
             """ Resnet50
@@ -351,8 +349,10 @@ def initialize_model(model_name, num_classes,in_channels,out_channels,
                 input_size = 28
                 model_ft.conv1 = nn.Conv2d(1, model_ft.conv1.out_channels,
                         kernel_size=3, stride=1, padding=1, bias=False)
-    # TODO - Change this to be dependent on the dataset parameters 
-    if dataset == 'mnist' or dataset == 'fashionmnist':
-        input_size = 27
+            elif dataset == 'cifar10':
+                model_ft.conf1 = nn.Conv2d(3, model_ft.conv1.out_channels,
+                        kernel_size=3, stride=1, padding=1, bias=False)
+                input_size = 32
+
     return model_ft, input_size
 
