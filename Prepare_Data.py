@@ -151,6 +151,7 @@ def Prepare_DataLoaders(Network_parameters, split,input_size=224, comet_exp=None
         train_indices = []
         val_indices = []
     
+        # split = 0
         # sss = StratifiedShuffleSplit(n_splits=Network_parameters['Splits'][Dataset], test_size=0.1,
         #                       random_state=Network_parameters['random_state'])
         skf = StratifiedKFold(n_splits=Network_parameters['Splits'][Dataset],shuffle=True,
@@ -189,6 +190,7 @@ def Prepare_DataLoaders(Network_parameters, split,input_size=224, comet_exp=None
         train_indices = []
         val_indices = []
     
+        # split = 0
         # sss = StratifiedShuffleSplit(n_splits=Network_parameters['Splits'][Dataset], test_size=0.1,
         #                       random_state=Network_parameters['random_state'])
         skf = StratifiedKFold(n_splits=Network_parameters['Splits'][Dataset],shuffle=True,
@@ -222,28 +224,31 @@ def Prepare_DataLoaders(Network_parameters, split,input_size=224, comet_exp=None
             transforms.RandomHorizontalFlip()
         ]
         train_dataset = datasets.CIFAR10(data_dir, train=True,
-                                      transform=transforms.Compose(extra_tr + cifar10_tr),
+                                      transform=transforms.Compose(cifar10_tr + extra_tr),
                                       download=True)
         X = np.ones(len(train_dataset))
         Y = train_dataset.targets
         train_indices = []
         val_indices = []
     
-        sss = StratifiedShuffleSplit(n_splits=Network_parameters['Splits'][Dataset], test_size=0.1,
-                              random_state=Network_parameters['random_state'])
+        # split = 0
+        # sss = StratifiedShuffleSplit(n_splits=Network_parameters['Splits'][Dataset], test_size=0.1,
+        #                       random_state=Network_parameters['random_state'])
+        skf = StratifiedKFold(n_splits=Network_parameters['Splits'][Dataset],shuffle=True,
+                   random_state=Network_parameters['random_state'])
         
-        for train_index, val_index in sss.split(X, Y):
+        for train_index, val_index in skf.split(X, Y):
              train_indices.append(train_index)
              val_indices.append(val_index)
         
-        validation_dataset = Subset_Wrapper(train_dataset, val_indices[0])
-        train_dataset = Subset_Wrapper(train_dataset, train_indices[0])
+        validation_dataset = Subset_Wrapper(train_dataset, val_indices[split])
+        train_dataset = Subset_Wrapper(train_dataset, train_indices[split])
         test_dataset = datasets.CIFAR10(data_dir, train=False,
                                         transform=transforms.Compose(cifar10_tr),
                                         download=True)
         test_dataset = Subset_Wrapper(test_dataset, np.random.permutation(len(test_dataset)))
 
-        dataset_info['Train_Transform'] = extra_tr + cifar10_tr
+        dataset_info['Train_Transform'] = cifar10_tr + extra_tr
         dataset_info['Test-Val_Transform'] = cifar10_tr
         dataset_info['Dataset_Sizes'] = [len(train_dataset),
                                          len(validation_dataset),

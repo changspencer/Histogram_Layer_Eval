@@ -85,7 +85,7 @@ class HistogramLayer(nn.Module):
             raise RuntimeError('Invalid dimension for histogram layer')
 
         # Change initializations for the histogram mean values
-        nn.init.uniform(self.centers, a=-0.75, b=0.75)
+        nn.init.uniform(self.centers, a=-0.5, b=0.5)
 
         
     def forward(self,xx):
