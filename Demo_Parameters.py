@@ -33,10 +33,10 @@ val_split = True
 Parallelize_model = True
 
 #Main GPU to use
-gpu = 3
+gpu = 1
 
 #Select dataset. Set to number of desired texture dataset
-data_selection = 1
+data_selection = 0
 Dataset_names = { 0: 'mnist', 1: 'DTD', 2: 'GTOS-mobile', 3: 'MINC_2500',
                   4: 'fashionmnist', 5: 'cifar10', 6: 'cifar100'}
 
@@ -111,7 +111,7 @@ wgt_decay = 0
 #the recommended training batch size is 128 (as done in paper)
 #May need to reduce batch size if CUDA out of memory issue occurs
 batch_size = {'train': 64, 'val': 256, 'test': 256}
-num_epochs = 30
+num_epochs = 10
 
 #Resize the image before center crop. Recommended values for resize is 256 (used in paper), 384,
 #and 512 (from http://openaccess.thecvf.com/content_cvpr_2018/papers/Xue_Deep_Texture_Manifold_CVPR_2018_paper.pdf)
@@ -128,7 +128,7 @@ pin_memory = True
 num_workers = 1
 
 #Output feature map size after histogram layer
-feat_map_size = 4
+feat_map_size = 1
 
 #Flag for TSNE visuals, set to True to create TSNE visual of features
 #Set to false to not generate TSNE visuals
@@ -144,7 +144,7 @@ Num_TSNE_images = 10000
 fig_size = 12
 font_size = 16
 
-#Set filter size and stride based on scale
+#Set filter size and stride based on scale (histogram layer)
 # Current values will produce 2x2 local feature maps
 if scale == 1:
     stride = [32, 32] 
@@ -167,10 +167,10 @@ else:
     in_channels = {"resnet50": 2048, "resnet18": 512}
     kernel_size = {"resnet50": [4,4],  "resnet18": [4,4]}
 
-if data_selection == 0 or data_selection == 4:  # for *MNIST 28x28 data
-    stride = [1, 1] 
-    in_channels = {"resnet50": 2048, "resnet18": 512}
-    kernel_size = {"resnet50": [2,2],  "resnet18": [2,2]}
+# if data_selection == 0 or data_selection == 4:  # for *MNIST 28x28 data
+#     stride = [1, 1] 
+#     in_channels = {"resnet50": 2048, "resnet18": 512}
+#     kernel_size = {"resnet50": [2,2],  "resnet18": [2,2]}
 
 ######## ONLY CHANGE PARAMETERS ABOVE ########
 if feature_extraction:

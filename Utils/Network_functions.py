@@ -189,10 +189,6 @@ def train_model(model, dataloaders, criterion, optimizer, device,
                 )
 
         if scheduler is not None:
-            # if comet_exp is not None and comet_exp.name.startswith("cifar10"):
-            #     prev_lr = scheduler._last_lr[0]
-            #     scheduler.step()  # Only call stepping for the CosineAnnealing Scheduler
-            # else:
             prev_lr = scheduler.state_dict()['_last_lr'][-1]
             scheduler.step()
             # Reload the best model weights when stepping the LR down
@@ -208,6 +204,8 @@ def train_model(model, dataloaders, criterion, optimizer, device,
     time_elapsed = time.time() - since
     print('Training complete in {:.0f}m {:.0f}s'.format(time_elapsed // 60, time_elapsed % 60))
     print('Best val Acc: {:4f}'.format(best_acc), end='\n\n')
+
+    comet_exp.log_metric("best_val_accuracy", best_acc)
 
     # load best model weights
     model.load_state_dict(best_model_wts)
@@ -259,7 +257,6 @@ def test_model(dataloader, model, device, comet_exp=None):
     print('Test Accuracy: {:4f}'.format(test_acc))
 
     if comet_exp is not None:
-        comet_exp.log_metric("test_accuracy", test_acc)
         conf_mat = comet_exp.create_confusion_matrix(max_categories=50)
         conf_mat.compute_matrix(GT[1:].flatten(), Predictions[1:].flatten(),
                 images=test_in.permute((0, 2, 3, 1)),
@@ -288,8 +285,7 @@ def initialize_model(model_name, num_classes,in_channels,out_channels,
         # variables is model specific.
         model_ft = HistRes(histogram_layer,parallel=parallel,
                            model_name=model_name,add_bn=add_bn,scale=scale,
-                           use_pretrained=use_pretrained,
-                           dataset=dataset)
+                           use_pretrained=use_pretrained)
         set_parameter_requires_grad(model_ft.backbone, feature_extract)
         
         #Reduce number of conv channels from input channels to input channels/number of bins*feat_map size (2x2)
@@ -308,8 +304,14 @@ def initialize_model(model_name, num_classes,in_channels,out_channels,
 
         # Change this to be dependent on the dataset parameters 
         if dataset == 'mnist' or dataset == 'fashionmnist':
+            model_ft.backbone.conv1 = nn.Conv2d(1, model_ft.backbone.conv1.out_channels,
+                    kernel_size=3, stride=1, padding=1, bias=False)
+            model_ft.backbone.maxpool = nn.Identity()
             input_size = 28
         elif dataset == 'cifar10':
+            model_ft.backbone.conv1 = nn.Conv2d(3, model_ft.backbone.conv1.out_channels,
+                    kernel_size=3, stride=1, padding=1, bias=False)
+            model_ft.backbone.maxpool = nn.Identity()
             input_size = 32
 
     # Baseline model

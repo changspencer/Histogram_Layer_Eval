@@ -8,7 +8,7 @@ import torch
 class HistRes(nn.Module):
     
     def __init__(self,histogram_layer,parallel=True,model_name ='resnet18',
-                 add_bn=True,scale=5,use_pretrained=True,dataset=None):
+                 add_bn=True,scale=5,use_pretrained=True):
         
         #inherit nn.module
         super(HistRes,self).__init__()
@@ -34,12 +34,6 @@ class HistRes(nn.Module):
         self.fc = self.backbone.fc
         self.backbone.fc = torch.nn.Sequential()
             
-        if dataset == 'mnist' or dataset == 'fashionmnist':
-            self.backbone.conv1 = nn.Conv2d(1, self.backbone.conv1.out_channels,
-                    kernel_size=3, stride=1, padding=1, bias=False)
-            # self.fc = nn.Linear(in_features=640,
-            #                     out_features=10)
-        
         
     def forward(self,x):
 
