@@ -15,6 +15,7 @@ import pandas as pd
 import os
 from sklearn.metrics import matthews_corrcoef
 import pickle
+from collections import OrderedDict
 
 ## PyTorch dependencies
 import torch
@@ -91,13 +92,13 @@ for split in range(0, NumRuns):
         
     # #Load model
     if Results_parameters['histogram_type'] == 'RBF':
-        histogram_layer = RBFHist(int(num_feature_maps/(feat_map_size*hist_bin)),
+        histogram_layer = RBFHist(int(num_feature_maps/(feat_map_size*numBins)),
                                   Results_parameters['kernel_size'][model_name],
                                   num_bins=Results_parameters['numBins'],stride=Results_parameters['stride'],
                                   normalize_count=Results_parameters['normalize_count'],
                                   normalize_bins=Results_parameters['normalize_bins'])
     elif Results_parameters['histogram_type'] == 'Linear': 
-        histogram_layer = LinearHist(int(num_feature_maps/(feat_map_size*hist_bin)),
+        histogram_layer = LinearHist(int(num_feature_maps/(feat_map_size*numBins)),
                                   Results_parameters['kernel_size'][model_name],
                                   num_bins=Results_parameters['numBins'],stride=Results_parameters['stride'],
                                   normalize_count=Results_parameters['normalize_count'],
@@ -120,6 +121,15 @@ for split in range(0, NumRuns):
     
     device_loc = torch.device(device)
     best_weights = torch.load(sub_dir + 'Best_Weights.pt',map_location=device_loc)
+
+    # Reloaded weights - data validation
+    best_weights_prefix = OrderedDict()
+    for key in best_weights.keys():
+        if not key.startswith('module.'):
+            best_weights_prefix['module.' + key] = best_weights[key]
+        else:
+            best_weights_prefix[key] = best_weights[key]
+
     #If parallelized, need to set change model
     if Results_parameters['Parallelize']:
         model = nn.DataParallel(model)

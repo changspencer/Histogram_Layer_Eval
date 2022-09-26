@@ -36,7 +36,7 @@ Parallelize_model = True
 gpu = 1
 
 #Select dataset. Set to number of desired texture dataset
-data_selection = 0
+data_selection = 4
 Dataset_names = { 0: 'mnist', 1: 'DTD', 2: 'GTOS-mobile', 3: 'MINC_2500',
                   4: 'fashionmnist', 5: 'cifar10', 6: 'cifar100'}
 
@@ -51,7 +51,7 @@ random_state = 1
 #higher than 128 or 512 for HistRes_B models using ResNet18 or ResNet50 
 #respectively, than an error will occur due to attempting to reduce the number of 
 #features maps to values less than one
-numBins = 4
+numBins = 8
 
 #Flag for feature extraction. False, train whole model. True, only update 
 #fully connected and histogram layers parameters (default: False)
@@ -59,7 +59,7 @@ numBins = 4
 #Flag to add BN to convolutional features (default:True)
 #Location/Scale at which to apply histogram layer (default: 5 (at the end))
 feature_extraction = False
-use_pretrained = True
+use_pretrained = False
 add_bn = True
 scale = 5
 
@@ -67,8 +67,8 @@ scale = 5
 #Recommended values are to have the new layers at 
 #a learning rate 10 times larger than the pt learning rate.
 #e.g., new_lr = .001 and pt_lr = .01
-pt_lr = .001
-new_lr = .01
+pt_lr = .1
+new_lr = .1
 
 #Set momentum for SGD optimizer. 
 #Recommended value is .9 (used in paper)
@@ -102,16 +102,16 @@ normalize_bins = True
 #Set step_size and decay rate for scheduler (multistepLR)
 #In Josh's OG paper, learning rate was decayed factor of .1 every ten epochs (recommended)
 #My addition: Weight decay (L2 penalty)
-step_size = 10
+step_size = 60
 gamma = .1
-wgt_decay = 0
+wgt_decay = 7.5e-5
 
 #Batch size for training and epochs. If running experiments on single GPU (e.g., 2080ti),
 #training batch size is recommended to be 64. If using at least two GPUs, 
 #the recommended training batch size is 128 (as done in paper)
 #May need to reduce batch size if CUDA out of memory issue occurs
-batch_size = {'train': 64, 'val': 256, 'test': 256}
-num_epochs = 10
+batch_size = {'train': 128, 'val': 256, 'test': 256}
+num_epochs = 150
 
 #Resize the image before center crop. Recommended values for resize is 256 (used in paper), 384,
 #and 512 (from http://openaccess.thecvf.com/content_cvpr_2018/papers/Xue_Deep_Texture_Manifold_CVPR_2018_paper.pdf)

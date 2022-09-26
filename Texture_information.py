@@ -25,12 +25,17 @@ GTOS_mobile_Class_names = np.array(['Painting','aluminum','asphalt','brick','cem
                         'pebble','plastic','plastic_cover','root','sand','sandPaper',
                         'shale','small_limestone','soil','steel','stone_asphalt',
                         'stone_brick','stone_cement','turf','wood_chips'])
+fashionmnist_Class_names = np.array(['t-shirt/top', 'trouser', 'pullover', 'dress',
+                                     'coat', 'sandal', 'shirt', 'sneaker', 'bag',
+                                     'ankle boot'])
 
 Class_names = {'DTD': DTD_Class_names, 
                'MINC_2500': MINC_Class_names, 
-               'GTOS-mobile': GTOS_mobile_Class_names}
+               'GTOS-mobile': GTOS_mobile_Class_names,
+               'fashionmnist': fashionmnist_Class_names}
 Data_dirs = {'DTD': './Datasets/DTD/', 
              'MINC_2500': './Datasets/minc-2500/',
-             'GTOS-mobile': './Datasets/gtos-mobile'}
+             'GTOS-mobile': './Datasets/gtos-mobile',
+             'fashionmnist': './Datasets/FashionMNIST'}
 
 

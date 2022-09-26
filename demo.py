@@ -61,6 +61,7 @@ device = torch.device(f"cuda:{gpu_dev}" if torch.cuda.is_available() else "cpu")
 #Location to store trained models
 current_directory = os.getcwd()
 final_directory = os.path.join(current_directory, Network_parameters['folder'])
+best_val_stats = np.zeros(numRuns)
 
 for split in range(0, numRuns):
 
@@ -221,6 +222,8 @@ for split in range(0, numRuns):
             dim_reduced=dim_reduced,
             comet_exp=experiment)
     test_dict = test_model(dataloaders_dict['test'], model_ft, device, comet_exp=experiment)
+
+    best_val_stats[split] = max(train_dict["val_acc_track"])
     
     # Save results
     if(Network_parameters['save_results']):
@@ -234,3 +237,6 @@ for split in range(0, numRuns):
         print('**********Run ' + str(split + 1) + ' For GAP_' + model_name + ' Finished**********') 
 
 experiment.end()
+print("\nBest Val-Acc Stats (mean, dev): {:.2f}, {:.2f}".format(
+            100*best_val_stats.mean(), 100*best_val_stats.std()))
+
