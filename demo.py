@@ -59,8 +59,9 @@ gpu_dev = Network_parameters['GPU_Num']
 device = torch.device(f"cuda:{gpu_dev}" if torch.cuda.is_available() else "cpu")
 
 #Location to store trained models
-current_directory = os.getcwd()
+current_directory = os.path.dirname(__file__)  # abs path of runfile
 final_directory = os.path.join(current_directory, Network_parameters['folder'])
+Network_parameters['data_dir'] = os.path.join(current_directory, Network_parameters['data_dir'])
 best_val_stats = np.zeros(numRuns)
 
 for split in range(0, numRuns):

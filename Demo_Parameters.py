@@ -167,11 +167,6 @@ else:
     in_channels = {"resnet50": 2048, "resnet18": 512}
     kernel_size = {"resnet50": [4,4],  "resnet18": [4,4]}
 
-# if data_selection == 0 or data_selection == 4:  # for *MNIST 28x28 data
-#     stride = [1, 1] 
-#     in_channels = {"resnet50": 2048, "resnet18": 512}
-#     kernel_size = {"resnet50": [2,2],  "resnet18": [2,2]}
-
 ######## ONLY CHANGE PARAMETERS ABOVE ########
 if feature_extraction:
     mode = 'Feature_Extraction'
@@ -179,13 +174,14 @@ else:
     mode = 'Fine_Tuning'
 
 #Location of texture datasets
-Data_dirs = {'DTD': './Datasets/DTD/', 
-             'MINC_2500': './Datasets/minc-2500/',
-             'GTOS-mobile': './Datasets/gtos-mobile',
-             'mnist': './Datasets/',
-             'fashionmnist': './Datasets/',
-             'cifar10': './Datasets/',
-             'cifar100': './Datasets/'
+
+Data_dirs = {'DTD': 'Datasets/DTD/', 
+             'MINC_2500': 'Datasets/minc-2500/',
+             'GTOS-mobile': 'Datasets/gtos-mobile',
+             'mnist': 'Datasets/',
+             'fashionmnist': 'Datasets/',
+             'cifar10': 'Datasets/',
+             'cifar100': 'Datasets/'
              }
 
 #ResNet models to use for each dataset
